@@ -26,6 +26,9 @@ export class Elevator extends BaseScene {
       if (onBeat || inBuild) steps.push(tt);
     }
     this.steps = steps;
+    // the shaft is lined with floating sale props; rising past them gives real parallax
+    for (const side of [-1, 1]) this.floatProps({ x0: side < 0 ? -15 : 7, x1: side < 0 ? -7 : 15, y0: -3, y1: 60, z0: -6, z1: 1, n: 46,
+      kinds: ['balloon', 'tag', 'coins', 'star', 'box', 'mini'], seed: 500 + side });
     this.bg = { pattern: 3, a: 0x15112a, b: 0x2a1a55, c: 0xffd400 };
   }
   // elevator height: sum of eased jolts; jolts grow as the build-up intensifies
@@ -57,7 +60,9 @@ export class Elevator extends BaseScene {
       this.lyric(o, t);
       const yAt = this.liftY(o.w.start);
       const side = k % 2 ? 1 : -1;
-      o.group.position.set(side * 4.6, yAt + 1.6 + (k % 2) * 0.8, -1.2 + k * 0.15);
+      // floors ride up with the lift at 55% speed, so they drift down slowly and stay readable
+      const yRide = yAt + Math.max(0, y - yAt) * 0.55;
+      o.group.position.set(side * 4.6, yRide + 1.6 + (k % 2) * 0.8, -1.2 + k * 0.15);
       o.group.rotation.set(0, side * -0.35, side * 0.05);
       if (after > 0) o.group.visible = false;
     });
@@ -68,13 +73,15 @@ export class Elevator extends BaseScene {
     c.group.position.set(0, top, 0.2);
     c.group.rotation.x = 0.25;
     if (after > 0) {
+      const u = easeOutCubic(clamp(after / 0.3)), v = clamp((after - 0.55) / 0.5);
       c.letters.forEach((L, i) => {
         const a = (i / c.letters.length - 0.5) * 2.6 + (hash(i) - 0.5) * 0.4;
-        L.mesh.position.x += Math.sin(a) * 9 * easeOutCubic(after * 1.2);
-        L.mesh.position.y += Math.cos(a) * 6 * easeOutCubic(after * 1.2) - 4 * after * after;
-        L.mesh.position.z += 5 * easeOutCubic(after);
-        L.mesh.rotation.set(after * 3 * hash(i + 1), after * 4, after * 5 * (hash(i) - 0.5));
+        L.mesh.position.x += L.baseX * 0.9 * u + Math.sin(a) * 9 * easeOutCubic(v);
+        L.mesh.position.y += Math.sin(i * 1.7) * 0.35 * u + Math.cos(a) * 6 * easeOutCubic(v) - 4 * v * v;
+        L.mesh.position.z += 2.5 * u + 5 * v;
+        L.mesh.rotation.set(v * 3 * hash(i + 1) + Math.sin(after * 20 + i) * 0.08 * (1 - v), v * 4, v * 5 * (hash(i) - 0.5));
       });
+      c.group.scale.setScalar(1 + 0.25 * u);
     } else {
       c.group.position.y += Math.sin(t * 30) * 0.03 * m.build(t);
     }
@@ -96,8 +103,12 @@ export class Elevator extends BaseScene {
     });
     // camera: rides up with the lift looking up the shaft; on the drop it is thrown back
     const shake = m.build(t) * 0.08;
-    this.cam.pos.set(Math.sin(t * 40) * shake + (launch ? 0 : 0.8), y + 1.2 + (launch ? 4 * easeOutCubic(after) : 0), 10 + (launch ? 9 * easeOutExpo(after / 0.8) : 0));
-    this.cam.look.set(0, y + 2.6 + (launch ? 4 : 0), 0);
+    // after the drop the camera first holds on the exploding word, then chases the rider
+    const yDrop = this.liftY(d - 0.001), hold = clamp((after - 0.5) / 0.45);
+    const camY = launch ? (this.ceilY - 1.2) * (1 - hold) + (y + 4) * hold : y + 1.2;
+    const lookY = launch ? this.ceilY * (1 - hold) + (y + 6) * hold : y + 2.6;
+    this.cam.pos.set(Math.sin(t * 40) * shake + (launch ? 0 : 0.8), camY, 10 + (launch ? 6 * easeOutExpo(after / 0.8) : 0));
+    this.cam.look.set(0, lookY, 0);
     this.cam.fov = launch ? 58 : 50 - m.build(t) * 8;
     this.cam.roll = launch ? after * 0.4 : Math.sin(t * 2) * 0.03;
     this.light.target.set(0, y + 1, 0);

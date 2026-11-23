@@ -88,6 +88,21 @@ platforms, a domino line and an elliptical tunnel. A background typography layer
 the words already sung in the current phrase, in giant rows that step on every kick, so the
 whole frame stays part of the lyric world without anything appearing before it is sung.
 
+### Set dressing (`engine/decor.js`)
+No empty floors. Every scene is dressed as an electronics-store sale: cardboard boxes with
+T-POT tape, price tags (SALE, -50%, $99...), shopping bags, coin stacks, speakers whose cones
+pump with the kick, SALE starbursts, mini appliances and balloons. Floors get tiled, dotted or
+striped textures with T-POT stamps. The street scene has a neon skyline with flickering
+rooftop signs, and the sky and elevator scenes have floating props for depth. Props hop on
+every beat in a wave that ripples across the floor, bigger on strong beats. Scatter
+keep-out zones keep them clear of the action and of the camera's view of the lyrics.
+
+### Readability audit
+`node render/render.js --audit 1` renders the first 1.2 s after every sung word. It checks
+that the word is visible, in front of the camera, inside the frame and at least 3% of the frame
+height. A word fails if it is readable for less than 0.5 s or becomes visible more than 0.12 s
+after its onset. Results go to `output/word_audit.json`. Currently all 65 words pass.
+
 ### Logo
 `tools/trace_logo.py` traces the supplied artwork (`assets/tpot_logo_src.png`) into vector
 paths (`assets/tpot_logo.json`). The engine uses them twice: extruded into 3D for the race and

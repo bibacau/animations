@@ -17,7 +17,7 @@ export class WasherVortex extends BaseScene {
     this.tv = this.product('tv'); this.tv.scale.setScalar(1.1);
     this.fridge = this.product('fridge'); this.fridge.scale.setScalar(1.15); this.fridge.position.set(9.5, 0, -1.5); this.fridge.rotation.y = -0.5;
     this.rice = this.product('rice'); this.rice.position.set(-9.8, 0, -0.5); this.rice.rotation.y = 0.4;
-    this.floor(0x2a5bff, 300, 0);
+    this.floor(0x2a5bff, 300, 0, { tex: 'tiles', b: 0x2249d8 });
     const wi = W.findIndex((w) => /WASHER/.test(w.text));
     this.wrapIdx = wi >= 0 ? wi : Math.floor(W.length / 2);
     this.items = W.map((w, k) => {
@@ -32,9 +32,10 @@ export class WasherVortex extends BaseScene {
     });
     this.spinStart = W[this.wrapIdx].start;
     const last = this.items.at(-1);
-    this.dive = this.beatAfter(last.w.start + 0.45);
-    if (this.dive > this.t1 - 0.15) this.dive = this.t1 - 0.3;
+    this.dive = Math.max(last.w.start + 0.7, this.t1 - 0.32);
     this.flashWord = W.find((w) => w.text === 'FLASHING');
+    this.scatter({ x0: -20, x1: 20, z0: -12, z1: 7, n: 30, kinds: ['box', 'bag', 'speaker', 'tag', 'coins', 'star'],
+      keepOut: [{ x: 0, z: 1, r: 4.8 }, { x: -7.6, z: 1.2, r: 2.8 }, { x: 9.5, z: -1.5, r: 2.2 }, { x: -9.8, z: -0.5, r: 2 }, { x: -6, z: 3.9, r: 3 }, { x: 6, z: 3.9, r: 3 }, { x: 0, z: 9, r: 4 }] });
     this.bg = { pattern: 4, a: 0x2a5bff, b: 0x16e0ff, c: 0xffffff };
   }
   events() {
@@ -67,8 +68,10 @@ export class WasherVortex extends BaseScene {
         o.group.rotation.z = -ang * 1.5;
         o.group.scale.setScalar(Math.max(0.001, 1 - u) * (1 + m.beatPulse(t) * 0.06));
         if (fw && o.w === fw && t >= fw.start && t < (o.suck || 99)) {   // strobing word
-          const on = m.hat(t) > 0.35 || Math.floor(t * 20) % 2 === 0;
-          o.group.visible = o.group.visible && on;
+          // strobe by pulsing size + jitter (the word never disappears)
+          const fl = Math.max(m.hat(t), Math.floor(t * 16) % 2 ? 0.6 : 0);
+          o.group.scale.multiplyScalar(1 + fl * 0.14);
+          o.group.rotation.z += (fl - 0.3) * 0.06;
         }
         if (u >= 1) o.group.visible = false;
       } else if (o.role === 'wrap') {   // letters wrapped around the door ring, spinning with the drum

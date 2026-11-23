@@ -1,0 +1,457 @@
+[
+ {
+  "word": "T-POT",
+  "start": 1.329,
+  "scene": "tvPortal",
+  "readable": 1.2,
+  "firstSeen": 0
+ },
+ {
+  "word": "T-POT",
+  "start": 2.357,
+  "scene": "tvPortal",
+  "readable": 1.23,
+  "firstSeen": 0
+ },
+ {
+  "word": "TURN",
+  "start": 3.181,
+  "scene": "tvPortal",
+  "readable": 0.7,
+  "firstSeen": 0.03
+ },
+ {
+  "word": "IT",
+  "start": 3.28,
+  "scene": "tvPortal",
+  "readable": 0.6,
+  "firstSeen": 0.03
+ },
+ {
+  "word": "ON",
+  "start": 3.42,
+  "scene": "tvPortal",
+  "readable": 0.5,
+  "firstSeen": 0
+ },
+ {
+  "word": "LOWEST",
+  "start": 4.917,
+  "scene": "gravity",
+  "readable": 1.23,
+  "firstSeen": 0
+ },
+ {
+  "word": "PRICES",
+  "start": 5.962,
+  "scene": "gravity",
+  "readable": 1.23,
+  "firstSeen": 0
+ },
+ {
+  "word": "COME",
+  "start": 6.22,
+  "scene": "gravity",
+  "readable": 1.23,
+  "firstSeen": 0
+ },
+ {
+  "word": "AND",
+  "start": 6.728,
+  "scene": "gravity",
+  "readable": 1.23,
+  "firstSeen": 0
+ },
+ {
+  "word": "BE",
+  "start": 6.989,
+  "scene": "gravity",
+  "readable": 1,
+  "firstSeen": 0
+ },
+ {
+  "word": "GONE",
+  "start": 7.114,
+  "scene": "gravity",
+  "readable": 0.9,
+  "firstSeen": 0
+ },
+ {
+  "word": "WALKING",
+  "start": 8.89,
+  "scene": "platforms",
+  "readable": 1.23,
+  "firstSeen": 0
+ },
+ {
+  "word": "DOWN",
+  "start": 9.784,
+  "scene": "platforms",
+  "readable": 1.13,
+  "firstSeen": 0
+ },
+ {
+  "word": "THE",
+  "start": 10.313,
+  "scene": "platforms",
+  "readable": 1.03,
+  "firstSeen": 0
+ },
+ {
+  "word": "STREET",
+  "start": 10.577,
+  "scene": "platforms",
+  "readable": 1,
+  "firstSeen": 0
+ },
+ {
+  "word": "SAW",
+  "start": 10.942,
+  "scene": "platforms",
+  "readable": 0.97,
+  "firstSeen": 0
+ },
+ {
+  "word": "A",
+  "start": 11.326,
+  "scene": "platforms",
+  "readable": 0.73,
+  "firstSeen": 0
+ },
+ {
+  "word": "NEON",
+  "start": 11.587,
+  "scene": "platforms",
+  "readable": 0.73,
+  "firstSeen": 0
+ },
+ {
+  "word": "LIGHT",
+  "start": 11.906,
+  "scene": "platforms",
+  "readable": 0.73,
+  "firstSeen": 0
+ },
+ {
+  "word": "SAID",
+  "start": 12.62,
+  "scene": "productSlam",
+  "readable": 1.23,
+  "firstSeen": 0
+ },
+ {
+  "word": "TV'S",
+  "start": 13.888,
+  "scene": "productSlam",
+  "readable": 1.23,
+  "firstSeen": 0
+ },
+ {
+  "word": "AND",
+  "start": 14.44,
+  "scene": "productSlam",
+  "readable": 1.2,
+  "firstSeen": 0
+ },
+ {
+  "word": "WASHERS",
+  "start": 14.675,
+  "scene": "productSlam",
+  "readable": 1.2,
+  "firstSeen": 0
+ },
+ {
+  "word": "PRICE",
+  "start": 15.354,
+  "scene": "productSlam",
+  "readable": 1.2,
+  "firstSeen": 0
+ },
+ {
+  "word": "JUST",
+  "start": 15.86,
+  "scene": "productSlam",
+  "readable": 1.03,
+  "firstSeen": 0
+ },
+ {
+  "word": "RIGHT",
+  "start": 16.4,
+  "scene": "productSlam",
+  "readable": 0.87,
+  "firstSeen": 0
+ },
+ {
+  "word": "I",
+  "start": 17.775,
+  "scene": "staircase",
+  "readable": 1.2,
+  "firstSeen": 0
+ },
+ {
+  "word": "STEPPED",
+  "start": 18.04,
+  "scene": "staircase",
+  "readable": 1.2,
+  "firstSeen": 0
+ },
+ {
+  "word": "INSIDE",
+  "start": 18.32,
+  "scene": "staircase",
+  "readable": 1.2,
+  "firstSeen": 0
+ },
+ {
+  "word": "COULDN'T",
+  "start": 18.78,
+  "scene": "staircase",
+  "readable": 1.2,
+  "firstSeen": 0
+ },
+ {
+  "word": "BELIEVE",
+  "start": 19.537,
+  "scene": "staircase",
+  "readable": 1.2,
+  "firstSeen": 0
+ },
+ {
+  "word": "MY",
+  "start": 19.82,
+  "scene": "staircase",
+  "readable": 1.2,
+  "firstSeen": 0
+ },
+ {
+  "word": "EYES",
+  "start": 20.631,
+  "scene": "staircase",
+  "readable": 0.8,
+  "firstSeen": 0
+ },
+ {
+  "word": "T-POT'S",
+  "start": 22.082,
+  "scene": "elevator",
+  "readable": 1.2,
+  "firstSeen": 0
+ },
+ {
+  "word": "SURPRISE",
+  "start": 24.201,
+  "scene": "elevator",
+  "readable": 0.83,
+  "firstSeen": 0
+ },
+ {
+  "word": "DEALS",
+  "start": 22.889,
+  "scene": "elevator",
+  "readable": 1.2,
+  "firstSeen": 0
+ },
+ {
+  "word": "TOOK",
+  "start": 23.1,
+  "scene": "elevator",
+  "readable": 1.2,
+  "firstSeen": 0
+ },
+ {
+  "word": "ME",
+  "start": 23.5,
+  "scene": "elevator",
+  "readable": 0.93,
+  "firstSeen": 0
+ },
+ {
+  "word": "BY",
+  "start": 23.754,
+  "scene": "elevator",
+  "readable": 0.67,
+  "firstSeen": 0
+ },
+ {
+  "word": "T-POT",
+  "start": 25.734,
+  "scene": "tunnel",
+  "readable": 0.8,
+  "firstSeen": 0
+ },
+ {
+  "word": "WHERE",
+  "start": 26.982,
+  "scene": "tunnel",
+  "readable": 0.67,
+  "firstSeen": 0
+ },
+ {
+  "word": "THE",
+  "start": 27.74,
+  "scene": "tunnel",
+  "readable": 0.83,
+  "firstSeen": 0
+ },
+ {
+  "word": "SAVINGS",
+  "start": 27.986,
+  "scene": "tunnel",
+  "readable": 0.67,
+  "firstSeen": 0
+ },
+ {
+  "word": "NEVER",
+  "start": 28.64,
+  "scene": "tunnel",
+  "readable": 0.8,
+  "firstSeen": 0
+ },
+ {
+  "word": "STOP",
+  "start": 29.524,
+  "scene": "tunnel",
+  "readable": 1.03,
+  "firstSeen": 0.03
+ },
+ {
+  "word": "TV'S",
+  "start": 31.456,
+  "scene": "washer",
+  "readable": 1.23,
+  "firstSeen": 0
+ },
+ {
+  "word": "FLASHING",
+  "start": 32.119,
+  "scene": "washer",
+  "readable": 0.8,
+  "firstSeen": 0
+ },
+ {
+  "word": "WASHERS",
+  "start": 32.612,
+  "scene": "washer",
+  "readable": 1.23,
+  "firstSeen": 0
+ },
+ {
+  "word": "GOING",
+  "start": 33.065,
+  "scene": "washer",
+  "readable": 0.83,
+  "firstSeen": 0
+ },
+ {
+  "word": "NON-STOP",
+  "start": 33.4,
+  "scene": "washer",
+  "readable": 0.6,
+  "firstSeen": 0
+ },
+ {
+  "word": "LOW",
+  "start": 35.172,
+  "scene": "domino",
+  "readable": 1.23,
+  "firstSeen": 0
+ },
+ {
+  "word": "PRICES",
+  "start": 35.836,
+  "scene": "domino",
+  "readable": 1.23,
+  "firstSeen": 0
+ },
+ {
+  "word": "OH",
+  "start": 36.717,
+  "scene": "domino",
+  "readable": 1.03,
+  "firstSeen": 0
+ },
+ {
+  "word": "YEAH",
+  "start": 36.9,
+  "scene": "domino",
+  "readable": 0.93,
+  "firstSeen": 0
+ },
+ {
+  "word": "THAT'S",
+  "start": 37.477,
+  "scene": "domino",
+  "readable": 1.23,
+  "firstSeen": 0
+ },
+ {
+  "word": "THE",
+  "start": 37.732,
+  "scene": "domino",
+  "readable": 1.07,
+  "firstSeen": 0
+ },
+ {
+  "word": "PLOT",
+  "start": 37.82,
+  "scene": "domino",
+  "readable": 0.97,
+  "firstSeen": 0
+ },
+ {
+  "word": "YOU",
+  "start": 39.024,
+  "scene": "slide",
+  "readable": 1.17,
+  "firstSeen": 0
+ },
+ {
+  "word": "WANT",
+  "start": 39.673,
+  "scene": "slide",
+  "readable": 0.77,
+  "firstSeen": 0
+ },
+ {
+  "word": "THE",
+  "start": 40.063,
+  "scene": "slide",
+  "readable": 0.77,
+  "firstSeen": 0
+ },
+ {
+  "word": "BEST",
+  "start": 40.16,
+  "scene": "slide",
+  "readable": 1.23,
+  "firstSeen": 0
+ },
+ {
+  "word": "DEAL",
+  "start": 40.683,
+  "scene": "slide",
+  "readable": 1.03,
+  "firstSeen": 0
+ },
+ {
+  "word": "HEAD",
+  "start": 41.308,
+  "scene": "slide",
+  "readable": 0.77,
+  "firstSeen": 0
+ },
+ {
+  "word": "TO",
+  "start": 41.572,
+  "scene": "slide",
+  "readable": 1.23,
+  "firstSeen": 0
+ },
+ {
+  "word": "T-POT",
+  "start": 41.972,
+  "scene": "slide",
+  "readable": 0.83,
+  "firstSeen": 0.07
+ }
+]

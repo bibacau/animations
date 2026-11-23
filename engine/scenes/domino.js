@@ -9,7 +9,7 @@ export class Domino extends BaseScene {
   constructor(ctx, plan) {
     super(ctx, plan);
     const m = this.music, W = this.words, N = W.length;
-    this.floor(0x16e0ff, 300, 0);
+    this.floor(0x16e0ff, 300, 0, { tex: 'stripes', b: 0x4cecff });
     // downbeat at/after the end of the scene's last word = final hit (cut lands on it)
     this.finalHit = this.t1;
     const sixteenth = m.period / 4;
@@ -27,6 +27,10 @@ export class Domino extends BaseScene {
       o.tip = o.hit - this.fallDur;
       return o;
     });
+    const keep = [];
+    this.items.forEach((o) => { keep.push({ x: o.base.x, z: o.base.z, r: 2.2 }, { x: o.base.x + 1.8, z: o.base.z - 1.1, r: 2.2 }); });
+    keep.push({ x: this.items[0].base.x - 4, z: 2, r: 3 });
+    this.scatter({ x0: -20, x1: 16, z0: -15, z1: 0.5, n: 34, kinds: ['coins', 'tag', 'bag', 'star', 'mini', 'box'], keepOut: keep });
     this.pusher = this.product('fridge'); this.pusher.scale.setScalar(0.8);
     this.bg = { pattern: 1, a: 0x2a5bff, b: 0x16e0ff, c: 0xffffff };
   }

@@ -70,11 +70,12 @@ async function boot() {
   post.uniforms.uAspect.value = W / H;
 
   const U = bg.material.uniforms;
-  window.renderAt = (t) => {
+  window.renderAt = (t, draw = true) => {
     let active = scenes[0];
     for (const s of scenes) { if (t >= s.t0) active = s; s.group.visible = false; }
     active.group.visible = true;
     active.update(t);
+    active.updateDecor(t);
 
     // ---- camera: scene camera + music-driven punch / shake / roll -------------------
     const c = active.cam;
@@ -133,7 +134,34 @@ async function boot() {
     PU.uShine.value = card ? card.shine : -1;
     PU.uVig.value = card ? 1 - card.wipeDone : 1;
     if (card) { PU.uLogoRect.value.copy(card.rect); PU.uWipeC.value.copy(card.center); }
-    composer.render();
+    if (draw) composer.render();
+  };
+  // ---- readability audit: for every sung word, how long is it actually readable? -------
+  // readable = visible, in front of the camera, centre inside the frame, letters >= 3% of
+  // the frame height. Sampled at 30 fps from the vocal onset for up to 1.2 s.
+  window.auditWords = () => {
+    const v = new THREE.Vector3(), out = [];
+    for (const s of scenes) for (const o of s.lyricObjs || []) {
+      const w = o.w; let seen = 0, first = null;
+      const end = Math.min(w.start + 1.2, s.t1);
+      for (let t = w.start; t < end; t += 1 / 30) {
+        window.renderAt(t, false);
+        let vis = o.group.visible; for (let p = o.group.parent; p && vis; p = p.parent) vis = p.visible;
+        if (!vis) continue;
+        o.group.updateMatrixWorld(true);
+        const c = new THREE.Box3().setFromObject(o.group);
+        if (c.isEmpty()) continue;
+        const ctr = c.getCenter(new THREE.Vector3());
+        v.copy(ctr).applyMatrix4(camera.matrixWorldInverse); if (v.z > -0.5) continue;
+        const p0 = ctr.clone().project(camera);
+        const top = new THREE.Vector3(ctr.x, c.max.y, ctr.z).project(camera), bot = new THREE.Vector3(ctr.x, c.min.y, ctr.z).project(camera);
+        const hFrac = Math.abs(top.y - bot.y) / 2;
+        if (Math.abs(p0.x) > 0.97 || Math.abs(p0.y) > 0.97 || hFrac < 0.03) continue;
+        seen += 1 / 30; if (first === null) first = t - w.start;
+      }
+      out.push({ word: w.display, start: w.start, scene: s.plan.meta.id, readable: +seen.toFixed(2), firstSeen: first === null ? null : +first.toFixed(2) });
+    }
+    return out;
   };
   window.frameJPEG = (t, q = 0.93) => { window.renderAt(t); return canvas.toDataURL('image/jpeg', q); };
   window.__duration = tl.duration;

@@ -1,3 +1,4 @@
+import * as THREE from 'three';
 // TV PORTAL: the TV powers on with the music and every lyric bursts out of its screen
 // toward the viewer; the camera backs away from the flying words.
 import { BaseScene, groupRows, clamp } from './base.js';
@@ -9,11 +10,24 @@ export class TvPortal extends BaseScene {
   constructor(ctx, plan) {
     super(ctx, plan);
     this.tv = this.product('tv');
-    this.shadowFloor(this.tv.userData.base, 0.45);
+    // showroom: TVs on red display stands over a tiled store floor, props all around
+    const FY = -3.6;
+    this.floor(0x140b2a, 200, FY, { tex: 'tiles', b: 0x1f1240 });
+    const stand = (x, z, top, w) => {
+      const h = top - FY;
+      const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, 1.4), new THREE.MeshStandardMaterial({ color: 0xc8102e, roughness: 0.45 }));
+      m.position.set(x, FY + h / 2, z); m.castShadow = m.receiveShadow = true; this.group.add(m);
+      const trim = new THREE.Mesh(new THREE.BoxGeometry(w + 0.1, 0.1, 1.5), new THREE.MeshStandardMaterial({ color: 0xffd400, metalness: 0.6, roughness: 0.3 }));
+      trim.position.set(x, top, z); this.group.add(trim);
+    };
+    stand(0, 0, this.tv.userData.base, 2.6);
+    this.scatter({ x0: -16, x1: 16, z0: -11, z1: 4, y: FY, n: 30, kinds: ['speaker', 'box', 'mini', 'coins', 'star', 'bag'],
+      keepOut: [{ x: 0, z: 0, r: 2.8 }, { x: -8.6, z: -5, r: 2.4 }, { x: 8.6, z: -5, r: 2.4 }, { x: 0, z: 2.6, r: 5.5 }] });
     // 16:9: words fly out to the left, right and across the bottom of the frame
     const slots = [{ x: -4.5, y: 0.55, z: 0.9 }, { x: 4.5, y: 0.55, z: 0.9 }, { x: 0, y: -2.75, z: 2.4 }, { x: -5.4, y: 3.1, z: -0.4 }, { x: 5.4, y: 3.1, z: -0.4 }];
     // two extra screens in the background echo the main one
     this.sideTVs = [-1, 1].map((sd) => { const tv = this.product('tv'); tv.scale.setScalar(1.15); tv.position.set(sd * 8.6, 1.6, -5); tv.rotation.y = -sd * 0.45; return tv; });
+    this.sideTVs.forEach((tv) => stand(tv.position.x, tv.position.z, 1.6 + tv.userData.base * 1.15, 2.4));
     this.items = [];
     groupRows(this.words).forEach((row, r) => {
       const slot = slots[r % slots.length];

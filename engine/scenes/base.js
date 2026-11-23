@@ -4,6 +4,7 @@ import { Word3D, COMBOS } from '../text3d.js';
 import { chooseEntrance, applyEntrance, chooseExit, applyExit } from '../entrances.js';
 import { Character } from '../character.js';
 import { makeProduct } from '../products.js';
+import { floorTexture, scatter, floatProps, skyline, animateDecor } from '../decor.js';
 import { mulberry32, clamp, easeInOutCubic, lerp } from '../util.js';
 
 export class BaseScene {
@@ -27,6 +28,7 @@ export class BaseScene {
     mem.lastEntrance = obj.entrance;
     obj.exitSpec = chooseExit(this.rng, mem.lastExit); mem.lastExit = obj.exitSpec.type;
     obj.w = w;
+    (this.lyricObjs ||= []).push(obj);
     (o.parent || this.group).add(obj.group);
     return obj;
   }
@@ -44,8 +46,11 @@ export class BaseScene {
   }
   character(skin, scale = 1) { const c = new Character(skin, scale); this.group.add(c.root); return c; }
   product(kind) { const p = makeProduct(kind); this.group.add(p); return p; }
-  floor(color = 0x2a1a55, size = 200, y = 0) {
-    const m = new THREE.Mesh(new THREE.PlaneGeometry(size, size), new THREE.MeshStandardMaterial({ color, roughness: 0.8 }));
+  /** floor plane; o.tex = 'tiles'|'dots'|'stripes'|'grid' with o.b as the second colour */
+  floor(color = 0x2a1a55, size = 200, y = 0, o = {}) {
+    const mat = o.tex ? new THREE.MeshStandardMaterial({ map: floorTexture(o.tex, color, o.b ?? 0xffffff, size / (o.tile || 4)), roughness: 0.7 })
+      : new THREE.MeshStandardMaterial({ color, roughness: 0.8 });
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(size, size), mat);
     m.rotation.x = -Math.PI / 2; m.position.y = y; m.receiveShadow = true; this.group.add(m); return m;
   }
   shadowFloor(y = 0, opacity = 0.35) {
@@ -81,6 +86,11 @@ export class BaseScene {
     for (const o of objs) { xs.push(x + o.width / 2); x += o.width + gap; }
     return xs;
   }
+  // ---- set dressing ------------------------------------------------------------
+  scatter(o) { (this.decor ||= []).push(...scatter(this.group, { seed: this.plan.seed % 1000 + 11, ...o })); }
+  floatProps(o) { (this.decor ||= []).push(...floatProps(this.group, { seed: this.plan.seed % 1000 + 23, ...o })); }
+  skyline(o) { (this.decor ||= []).push(...skyline(this.group, { seed: this.plan.seed % 1000 + 37, ...o })); }
+  updateDecor(t) { if (this.decor) animateDecor(this.decor, t, this.music, this.decorScroll ? this.decorScroll(t) : 0, this.decorWrap); }
   // registered once at build time (deterministic): fx events for this scene
   events() {}
   update(t) {}

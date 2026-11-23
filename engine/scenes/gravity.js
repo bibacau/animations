@@ -8,7 +8,11 @@ export class Gravity extends BaseScene {
   static meta = { id: 'gravity', keywords: ['LOWEST', 'LOW', 'PRICES', 'GONE', 'DROP', 'FALL', 'DOWN'], character: true, energy: [0, 0.75], minWords: 3, maxWords: 9 };
   constructor(ctx, plan) {
     super(ctx, plan);
-    this.floor(0xffd400, 200, 0);
+    this.floor(0xffd400, 200, 0, { tex: 'tiles', b: 0xffbf00 });
+    const path = []; for (let x = -10; x <= 4; x += 1.5) path.push({ x, z: 0.4, r: 1.4 });
+    for (let x = -9; x <= 9; x += 2) path.push({ x, z: 3.2, r: 2.2 });   // keep the view of the piles clear
+    this.scatter({ x0: -17, x1: 17, z0: -11, z1: 4.5, n: 34, kinds: ['box', 'bag', 'tag', 'coins', 'star', 'mini', 'box'],
+      keepOut: [{ x: 0, z: 0, r: 3.2 }, { x: -5.2, z: 0, r: 3.2 }, { x: 5.2, z: 0, r: 3.2 }, ...path] });
     this.items = [];
     const cols = [0, -5.2, 5.2];               // 16:9: three piles spread across the frame
     const colY = [0, 0, 0];
@@ -65,7 +69,7 @@ export class Gravity extends BaseScene {
       const fall = o.land - o.w.start;
       const u = clamp((t - o.w.start) / fall);
       const r = o.rest;
-      let y = r.y + (1 - easeInCubic(u)) * 9;
+      let y = r.y + (1 - easeInCubic(u)) * 3.2;
       // squash on landing + jolt when later words land on top
       let sq = springHit(t - o.land, 30, 10) * 0.35;
       for (const p of this.items.slice(k + 1)) sq += springHit(t - p.land, 26, 12) * 0.12;

@@ -11,7 +11,7 @@ export class ProductSlam extends BaseScene {
   static meta = { id: 'productSlam', keywords: ["TV'S", 'WASHERS', 'PRICE', 'DEALS', 'TV', 'WASHER', 'FRIDGE'], products: true, energy: [0.15, 1], minWords: 3, maxWords: 10 };
   constructor(ctx, plan) {
     super(ctx, plan);
-    this.floor(0xf3e9ff, 300, 0);
+    this.floor(0xf3e9ff, 300, 0, { tex: 'tiles', b: 0xe2d3ff });
     const N = this.words.length;
     this.items = [];
     let x = 0;
@@ -38,6 +38,10 @@ export class ProductSlam extends BaseScene {
     fin.base.y = 3.2;
     // a "bouncing" word: the one right after a product word bounces off that product
     this.items.forEach((o, k) => { if (!o.kind && !o.lastWord && this.items[k - 1]?.prod) o.bounceOff = this.items[k - 1]; });
+    const keep = this.items.map((o) => ({ x: o.base.x, z: o.base.z, r: o.width / 2 + 1.6 }));
+    const xmax = this.items.at(-1).base.x + 10;
+    this.scatter({ x0: -10, x1: xmax, z0: -11, z1: -2.8, n: 40, kinds: ['box', 'mini', 'speaker', 'star', 'tag', 'box'], keepOut: keep });
+    this.scatter({ x0: -10, x1: xmax, z0: 1.6, z1: 3.2, n: 12, kinds: ['coins', 'coins', 'bag'], keepOut: keep, seed: 991 });
     this.bg = { pattern: 3, a: 0xffd400, b: 0xff7a1a, c: 0xffffff };
   }
   events() {
@@ -91,16 +95,23 @@ export class ProductSlam extends BaseScene {
     this.rice.userData.lid.rotation.x = -easeOutBack(clamp((t - fin.w.start + 0.08) / 0.25), 2.5) * 1.6;
     this.rice.rotation.y = Math.sin(t * 2) * 0.15;
     this.rice.scale.setScalar(1 + m.kick(t) * 0.06);
-    const slamming = this.items.find((o) => o.prod && Math.abs(t - o.slam) < 0.45);
-    if (slamming) focus = slamming;
-    // camera hops between subjects (eased track), lower & closer for product crashes
-    const fx_ = focus.base.x;
-    const prev = this.items[Math.max(0, this.items.indexOf(focus) - 1)];
-    const u = easeOutCubic(clamp((t - focus.w.start + 0.25) / 0.45));
-    const cx = prev.base.x + (fx_ - prev.base.x) * u;
-    const near = focus.prod ? 1 : 0;
-    this.cam.pos.set(cx + 1.6, 2.6 + near * 1.3, 8.6 + near * 1.6);
-    this.cam.look.set(cx, 1.5 + near * 0.9, focus.base.z);
+    // camera frames the set of things that matter right now: words sung in the last
+    // second, the newest word, and any product mid-crash; averaged over a short window
+    let cx = 0, spread = 0, near = 0;
+    const N = 10;
+    for (let k = 0; k < N; k++) {
+      const tk = t - k * 0.035;
+      const xs = [];
+      this.items.forEach((o, i) => {
+        if (o.w.start <= tk + 0.05 && (tk - o.w.start < 0.9 || i === this.items.findLastIndex((q) => q.w.start <= tk + 0.05))) xs.push(o.base.x);
+        if (o.prod && Math.abs(tk - o.slam) < 0.4) { xs.push(o.base.x); near += 1 / N; }
+      });
+      if (!xs.length) xs.push(this.items[0].base.x);
+      cx += (Math.min(...xs) + Math.max(...xs)) / 2 / N;
+      spread += (Math.max(...xs) - Math.min(...xs)) / N;
+    }
+    this.cam.pos.set(cx + 1.4, 2.6 + near * 1.3, 8.6 + spread * 0.55 + near * 1.4);
+    this.cam.look.set(cx, 1.5 + near * 0.9, -0.4);
     this.cam.roll = 0.05;
     this.light.target.set(cx, 0, 0);
     this.bg.spin = -t * 0.4;

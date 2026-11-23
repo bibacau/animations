@@ -31,6 +31,14 @@ const blur = +(args.blur || 1);
   const dur = await page.evaluate(() => window.__duration);
   fs.writeFileSync(path.join(ROOT, 'output/scene_plan.json'), JSON.stringify(await page.evaluate(() => window.__plan), null, 1));
 
+  if (args.audit) {
+    const res = await page.evaluate(() => window.auditWords());
+    fs.writeFileSync(path.join(ROOT, 'output/word_audit.json'), JSON.stringify(res, null, 1));
+    const bad = res.filter((r) => r.readable < 0.5 || r.firstSeen === null || r.firstSeen > 0.12);
+    for (const r of res) console.log(`${bad.includes(r) ? 'FAIL' : ' ok '} ${r.scene.padEnd(12)} ${r.word.padEnd(9)} @${r.start.toFixed(2)}  readable ${r.readable.toFixed(2)}s  first ${r.firstSeen}`);
+    console.log(`${bad.length} of ${res.length} words fail (need >= 0.5 s readable, visible within 0.12 s of onset)`);
+    await browser.close(); srv.close(); return;
+  }
   if (args.stills) {
     const dir = path.join(ROOT, 'output/stills'); fs.mkdirSync(dir, { recursive: true });
     for (const s of args.stills.split(',')) {

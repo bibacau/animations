@@ -21,6 +21,9 @@ export class Platforms extends BaseScene {
       x += o.width + 1.1 + (w.text.length <= 1 ? 0.6 : 0);
       this.items.push(o);
     });
+    // neon city behind the street + sale props drifting between the platforms
+    this.skyline({ x0: -20, x1: x + 30, z: -34, y: -10, hMin: 8, hMax: 24 });
+    this.floatProps({ x0: -8, x1: x + 12, y0: -4, y1: 7, z0: -9, z1: -3.5, n: Math.round(x * 0.9), kinds: ['coins', 'tag', 'star', 'balloon'] });
     // landing plan: one platform per landing, each landing on a beat (8th if needed)
     this.char = this.character('volt', 0.75);
     const keys = [];
@@ -31,8 +34,7 @@ export class Platforms extends BaseScene {
     this.lands = [{ t: land, o: first }];
     let prevO = first;
     for (const o of this.items.slice(1)) {
-      let L = this.beatAfter(Math.max(o.w.start + 0.12, land + P * 0.95));
-      if (L > this.t1 - 0.2) L = this.beatAfter(Math.max(o.w.start + 0.1, land + P * 0.45), { half: true });
+      let L = this.beatAfter(Math.max(o.w.start + 0.1, land + P * 0.45), { half: true });
       if (L > this.t1 - 0.12) continue;
       const tramp = prevO.w.text.length <= 1;
       const runEnd = L - P * (tramp ? 0.5 : 0.8);
@@ -80,8 +82,15 @@ export class Platforms extends BaseScene {
     // side-scrolling camera that leads the runner and looks slightly down at the platforms
     // 16:9 side-scroller: runner on the left third, the next platforms fill the right
     const cy = p.y * 0.5 + this.keys[1].y * 0.5;
-    this.cam.pos.set(p.x + 3.6, cy + 2.4, 11);
-    this.cam.look.set(p.x + 4.2, cy + 0.2, 0);
+    // frame both the runner and the newest lyric (temporal average = smooth, deterministic)
+    let cx = 0;
+    for (let k = 0; k < 8; k++) {
+      const tk = t - k * 0.04, pk = keyPath(this.keys, tk);
+      const newest = this.items.filter((o) => o.w.start <= tk + 0.05).at(-1);
+      cx += Math.max(pk.x + 4.2, newest ? newest.base.x + newest.width / 2 - 5.5 : -1e9) / 8;
+    }
+    this.cam.pos.set(cx - 0.6, cy + 2.4, 11.5);
+    this.cam.look.set(cx, cy + 0.2, 0);
     this.cam.roll = -0.04;
     this.light.target.set(p.x, p.y, 0);
   }

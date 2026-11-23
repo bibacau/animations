@@ -38,7 +38,10 @@ export class Staircase extends BaseScene {
     keys.push({ t: this.collapse, x: keys.at(-1).x, y: keys.at(-1).y, z: keys.at(-1).z, mode: 'idle' });
     keys.push({ t: this.collapse + 0.9, x: keys.at(-1).x - 1, y: -6, z: 1, mode: 'fall', ease: (u) => u * u });
     this.keys = keys;
-    this.floor(0x1b1433, 300, -0.02);
+    this.floor(0x1b1433, 300, -0.02, { tex: 'dots', b: 0x2c2258 });
+    this.scatter({ x0: -10, x1: top.x + 12, z0: -12, z1: 4, n: 34, kinds: ['speaker', 'box', 'star', 'mini', 'balloon', 'bag'],
+      keepOut: [{ x: -2.6, z: 0.4, r: 1.8 }, ...this.steps.slice(0, 3).map((o) => ({ x: o.base.x, z: o.base.z, r: 2.2 })), { x: this.fridge.position.x, z: this.fridge.position.z, r: 2.4 }] });
+    this.floatProps({ x0: -4, x1: top.x + 10, y0: 3, y1: top.y + 7, z0: -10, z1: -5, n: 16, kinds: ['balloon', 'balloon', 'star', 'coins'] });
     this.bg = { pattern: 0, a: 0x120a2e, b: 0x7b2cff, c: 0x16e0ff };
   }
   events() {

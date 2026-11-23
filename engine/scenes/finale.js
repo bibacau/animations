@@ -48,7 +48,14 @@ export class Finale extends BaseScene {
       c.land = (slams[i] ?? this.A + P * (i + 1)) + P / 2;
       return c;
     });
-    this.floor(0x15112a, 400, 0);
+    this.floor(0x15112a, 400, 0, { tex: 'tiles', b: 0x221845 });
+    const keep = [{ x: -4, z: 0, r: 3.6 }, { x: 0, z: 0, r: 3.6 }, { x: 4, z: 0, r: 3.6 }, ...this.prods.map((p) => ({ x: p.userData.slot.x, z: p.userData.slot.z, r: 2.6 })),
+      { x: -3, z: 4, r: 2 }, { x: 0, z: 4, r: 2 }, { x: 3, z: 4, r: 2 }];
+    for (let x = -9; x <= 9; x += 2) keep.push({ x, z: 1.5, r: 1.8 });
+    this.scatter({ x0: -22, x1: 22, z0: -13, z1: 1.2, n: 34, kinds: ['speaker', 'balloon', 'box', 'star', 'tag', 'bag'], keepOut: keep });
+    // during the race the store scrolls past (the props wrap around); after assembly it parks
+    this.decorScroll = (t) => -(Math.min(t, this.A) - this.t0) * 17;
+    this.decorWrap = { x0: -22, x1: 22 };
     this.card = null;
     this._v = new THREE.Vector3(); this._b = new THREE.Box3();
     this.bg = { pattern: 2, a: 0x0b0620, b: 0x3a0f6e, c: 0x16e0ff };

@@ -31,6 +31,10 @@ export class Slide extends BaseScene {
     this.fin = this.word(fin, { height: 2.2, maxWidth: 7, depth: 1.6, font: 'bowlby', combo: ['red', 'yellow'], entrance: { type: 'smash', dur: 0.14 } });
     this.finPos = { x: end.x + 4.5, y: end.y - 4.2 };
     this.char = this.character('pip', 0.8);
+    // a sky full of sale balloons, coins and tags around the slide
+    this.floatProps({ x0: -8, x1: this.finPos.x + 12, y0: this.finPos.y - 6, y1: 7, z0: -12, z1: -3.5, n: 44, kinds: ['balloon', 'balloon', 'coins', 'star', 'tag'] });
+    this.floatProps({ x0: -8, x1: this.finPos.x + 12, y0: this.finPos.y - 8, y1: 4, z0: 3, z1: 5, n: 8, kinds: ['coins', 'balloon'], seed: 777,
+      keepOut: [] });
     this.bg = { pattern: 1, a: 0xff2a4d, b: 0xff7a1a, c: 0xffd400 };
   }
   pt(s, lift = 0) { return { x: this.dir.x * s + this.nrm.x * lift, y: this.dir.y * s + this.nrm.y * lift }; }
