@@ -1,0 +1,17 @@
+{
+  "name": "tpot-lyric-world",
+  "private": true,
+  "version": "1.0.0",
+  "description": "T-POT beat-synced lyric world music video generator",
+  "scripts": {
+    "analyze": "python3 analysis/analyze.py",
+    "preview": "node render/serve.js",
+    "render": "node render/render.js"
+  },
+  "dependencies": {
+    "@fontsource/anton": "^5.1.0",
+    "@fontsource/bowlby-one": "^5.1.0",
+    "opentype.js": "^1.3.4",
+    "three": "^0.170.0"
+  }
+}

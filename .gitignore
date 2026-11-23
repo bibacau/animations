@@ -1,0 +1,5 @@
+node_modules/
+output/stills/
+output/render.log
+*.tgz
+__pycache__/

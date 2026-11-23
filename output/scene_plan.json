@@ -1,0 +1,68 @@
+[
+ {
+  "template": "tvPortal",
+  "t0": 0,
+  "t1": 3.895,
+  "text": "T-POT, T-POT, TURN IT ON"
+ },
+ {
+  "template": "gravity",
+  "t0": 3.895,
+  "t1": 7.988,
+  "text": "LOWEST PRICES COME AND BE GONE"
+ },
+ {
+  "template": "platforms",
+  "t0": 7.988,
+  "t1": 12.62,
+  "text": "WALKING DOWN THE STREET, SAW A NEON LIGHT"
+ },
+ {
+  "template": "productSlam",
+  "t0": 12.62,
+  "t1": 17.252,
+  "text": "SAID TV'S AND WASHERS, PRICE JUST RIGHT"
+ },
+ {
+  "template": "staircase",
+  "t0": 17.252,
+  "t1": 21.838,
+  "text": "I STEPPED INSIDE, COULDN'T BELIEVE MY EYES"
+ },
+ {
+  "template": "elevator",
+  "t0": 21.838,
+  "t1": 25.426,
+  "text": "T-POT'S DEALS TOOK ME BY SURPRISE"
+ },
+ {
+  "template": "tunnel",
+  "t0": 25.426,
+  "t1": 30.569,
+  "text": "T-POT, WHERE THE SAVINGS NEVER STOP"
+ },
+ {
+  "template": "washer",
+  "t0": 30.569,
+  "t1": 34.662,
+  "text": "TV'S FLASHING, WASHERS GOING NON-STOP"
+ },
+ {
+  "template": "domino",
+  "t0": 34.662,
+  "t1": 38.772,
+  "text": "LOW PRICES, OH YEAH, THAT'S THE PLOT"
+ },
+ {
+  "template": "slide",
+  "t0": 38.772,
+  "t1": 42.87,
+  "text": "YOU WANT THE BEST DEAL, HEAD TO T-POT"
+ },
+ {
+  "template": "finale",
+  "t0": 42.87,
+  "t1": 50.353,
+  "text": "(instrumental)"
+ }
+]
