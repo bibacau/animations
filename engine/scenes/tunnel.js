@@ -9,7 +9,7 @@ import { wordGeometry, PALETTE } from '../text3d.js';
 import { easeOutCubic, easeInOutCubic, decay, springHit, easeOutBack } from '../util.js';
 import { Word3D } from '../text3d.js';
 
-const RINGS = 16, PER = 7, SPACING = 5.5, R = 4.6;
+const RINGS = 16, PER = 9, SPACING = 5.5, R = 4.6;
 
 export class Tunnel extends BaseScene {
   static meta = { id: 'tunnel', keywords: ['NEVER', 'STOP', 'NON-STOP', 'SAVINGS', 'FOREVER'], products: true, energy: [0.35, 1], minWords: 3, maxWords: 10 };
@@ -29,7 +29,7 @@ export class Tunnel extends BaseScene {
       const w = geo.boundingBox.max.x - geo.boundingBox.min.x;
       return { mesh, scale: Math.min(1, 3.4 / w) };
     });
-    this.center = W.map((w, k) => this.word(w, { height: 1.5, maxWidth: 4.4, font: k % 2 ? 'anton' : 'bowlby', depth: 0.8,
+    this.center = W.map((w, k) => this.word(w, { height: 1.9, maxWidth: 7.5, font: k % 2 ? 'anton' : 'bowlby', depth: 0.8,
       combo: w === this.stopWord ? ['red', 'ink'] : cols[(k + 2) % cols.length],
       entrance: w === this.stopWord ? { type: 'smash', dur: 0.12 } : undefined, pool: ['shoot', 'expand', 'scatter', 'flip', 'stretch'] }));
     this.center.forEach((o) => { o.zAt = this.camZ(o.w.start) - 10; });
@@ -86,7 +86,7 @@ export class Tunnel extends BaseScene {
       const flip = W.reduce((a, w) => Math.max(a, decay(t - (w.start + dist * 0.035), 14) * (t >= w.start + dist * 0.035 ? 1 : 0)), 0);
       for (let k = 0; k < PER; k++) {
         const a = k / PER * Math.PI * 2 + tw + ringIdx * 0.22;
-        const x = Math.cos(a) * R + curve(rz), y = Math.sin(a) * R;
+        const x = Math.cos(a) * R * 1.65 + curve(rz), y = Math.sin(a) * R;   // elliptical: fills 16:9
         e.set(flip * Math.PI, 0, a - Math.PI / 2); q.setFromEuler(e);
         const s = L.scale * (1 + m.beatPulse(t) * 0.12);
         mm.compose(new THREE.Vector3(x, y, rz), q, new THREE.Vector3(s, s, s));
@@ -107,7 +107,7 @@ export class Tunnel extends BaseScene {
     // products drift past on strong beats
     this.prods.forEach((p, i) => {
       const ps = p.userData.pass;
-      p.position.set(curve(ps.z) + Math.cos(ps.a) * 2.8, Math.sin(ps.a) * 2.8, ps.z);
+      p.position.set(curve(ps.z) + Math.cos(ps.a) * 4.6, Math.sin(ps.a) * 2.6, ps.z);
       p.rotation.set(t * 1.5, t * 2 + i, t * 0.7);
       p.visible = !stopped;
     });
@@ -117,7 +117,7 @@ export class Tunnel extends BaseScene {
     this.rider.root.visible = this.board.group.visible = vis;
     if (vis) {
       const rz = z - 3.5 - ru * 16;
-      const bx = curve(rz) + 1.5, by = -1.6 + Math.sin(ru * 9) * 0.3;
+      const bx = curve(rz) + 3.2, by = -1.8 + Math.sin(ru * 9) * 0.3;
       this.board.reset(); this.board.group.position.set(bx, by, rz); this.board.group.rotation.set(-Math.PI / 2 + 0.3, 0, 0.2);
       this.rider.root.position.set(bx, by + 0.4, rz); this.rider.root.rotation.set(0, Math.PI / 2 + 0.3, 0);
       this.rider.pose('surf', ru * 4);
@@ -125,10 +125,11 @@ export class Tunnel extends BaseScene {
     // camera: flies down the curved tunnel, rolls with the twist
     this.cam.pos.set(curve(z), 0, z);
     this.cam.look.set(curve(z - 12), 0, z - 12);
-    this.cam.fov = stopped ? 50 : 62 + m.kick(t) * 6;
+    this.cam.fov = stopped ? 46 : 54 + m.kick(t) * 5;
     this.cam.roll = tw * 0.25 + (stopped ? springHit(t - this.stopT, 20, 6) * 0.15 : 0);
     this.light.target.set(curve(z - 8), 0, z - 8);
     this.zoomBlur = stopped ? 0 : 0.12 + m.kick(t) * 0.15;
+    this.bgType = stopped ? { amt: 0.22, color: 0xffffff, style: 'fill', angle: 0, speed: 0 } : null;
     this.bg = stopped ? { pattern: 4, a: 0x120a2e, b: 0xff2a4d, c: 0xffffff } : { pattern: 5, a: 0x0a0618, b: 0x0a0618, c: 0xffffff };
   }
 }

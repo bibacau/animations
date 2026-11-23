@@ -14,7 +14,7 @@ export class Platforms extends BaseScene {
     const heights = [0, 0.9, -0.5, 1.4, 0.3, 1.9, 0.8, 2.4, 1.2, 2.8];
     this.words.forEach((w, k) => {
       const neon = /NEON|LIGHT/.test(w.text);
-      const o = this.word(w, { height: 1.0, maxWidth: 4.4, depth: 1.8, font: neon ? 'bowlby' : 'anton',
+      const o = this.word(w, { height: 1.25, maxWidth: 5.2, depth: 1.8, font: neon ? 'bowlby' : 'anton',
         combo: neon ? ['pink', 'purple'] : [['yellow', 'red'], ['cyan', 'blue'], ['white', 'purple'], ['lime', 'purple']][k % 4],
         emissive: neon ? 1.6 : 0, pool: ['rise', 'expand', 'flip', 'swing', 'stretch', 'drop'] });
       o.base = { x: x + o.width / 2, y: heights[k % heights.length] };
@@ -78,10 +78,10 @@ export class Platforms extends BaseScene {
     ch.root.rotation.y = mode === 'run' || mode === 'jump' ? Math.PI / 2 : 0.4;
     ch.pose(mode, (t * 2.4) % 1, decay(sinceLand, 12));
     // side-scrolling camera that leads the runner and looks slightly down at the platforms
-    // follow from behind-left so the upcoming platforms recede into the frame
-    const cy = p.y * 0.6 + (this.keys[1].y) * 0.4;
-    this.cam.pos.set(p.x - 3.2, cy + 3.0, 7.8);
-    this.cam.look.set(p.x + 2.4, cy - 0.2, -0.5);
+    // 16:9 side-scroller: runner on the left third, the next platforms fill the right
+    const cy = p.y * 0.5 + this.keys[1].y * 0.5;
+    this.cam.pos.set(p.x + 3.6, cy + 2.4, 11);
+    this.cam.look.set(p.x + 4.2, cy + 0.2, 0);
     this.cam.roll = -0.04;
     this.light.target.set(p.x, p.y, 0);
   }

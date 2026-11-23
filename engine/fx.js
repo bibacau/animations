@@ -84,10 +84,11 @@ export function makeBackground() {
   const mat = new THREE.ShaderMaterial({
     depthWrite: false, depthTest: false,
     uniforms: { uT: { value: 0 }, uA: { value: new THREE.Color(0x1b0b3a) }, uB: { value: new THREE.Color(0xff2a4d) }, uC: { value: new THREE.Color(0xffd400) },
-      uPattern: { value: 0 }, uPulse: { value: 0 }, uSpin: { value: 0 }, uCount: { value: 0 }, uAspect: { value: 9 / 16 } },
+      uPattern: { value: 0 }, uPulse: { value: 0 }, uSpin: { value: 0 }, uCount: { value: 0 }, uAspect: { value: 16 / 9 },
+      tType: { value: null }, uTypeAmt: { value: 0 }, uTypeCol: { value: new THREE.Color(1, 1, 1) } },
     vertexShader: `varying vec2 vUv; void main(){ vUv=uv; gl_Position=vec4(position.xy,0.9999,1.0); }`,
     fragmentShader: `
-      varying vec2 vUv; uniform float uT,uPattern,uPulse,uSpin,uCount,uAspect; uniform vec3 uA,uB,uC;
+      varying vec2 vUv; uniform float uT,uPattern,uPulse,uSpin,uCount,uAspect,uTypeAmt; uniform vec3 uA,uB,uC,uTypeCol; uniform sampler2D tType;
       float h(vec2 p){ return fract(sin(dot(p,vec2(12.9898,78.233)))*43758.5453); }
       void main(){
         vec2 p = vUv-0.5; p.x*=uAspect;
@@ -113,6 +114,7 @@ export function makeBackground() {
           col = uA*0.6; vec2 g=floor(p*90.0); float s=h(g); if(s>0.985) col+=uC*(0.6+0.4*sin(uT*8.0+s*40.0));
         }
         col += uPulse*0.18*uC*smoothstep(0.9,0.0,r);
+        if(uTypeAmt>0.001){ float a = texture2D(tType, vUv).a; col = mix(col, uTypeCol, a*uTypeAmt); }
         col *= 1.0 - 0.35*r*r;
         gl_FragColor = vec4(col,1.0);
       }`,
@@ -125,10 +127,13 @@ export function makeBackground() {
 // ---------------- post shader --------------------------------------------------------
 export const PostShader = {
   uniforms: { tDiffuse: { value: null }, uAb: { value: 0.0015 }, uFlash: { value: 0 }, uFlashCol: { value: new THREE.Color(1, 1, 1) },
-    uZoom: { value: 0 }, uGlitch: { value: 0 }, uSeed: { value: 0 }, uGrain: { value: 0.04 }, uInvert: { value: 0 } },
+    uZoom: { value: 0 }, uGlitch: { value: 0 }, uSeed: { value: 0 }, uGrain: { value: 0.025 }, uInvert: { value: 0 },
+    tLogo: { value: null }, uLogoAmt: { value: 0 }, uLogoRect: { value: new THREE.Vector4(0, 0, 1, 1) }, uWipe: { value: 0 },
+    uWipeC: { value: new THREE.Vector2(0.5, 0.5) }, uAspect: { value: 16 / 9 }, uShine: { value: -1 }, uVig: { value: 1 } },
   vertexShader: `varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }`,
   fragmentShader: `
-    uniform sampler2D tDiffuse; uniform float uAb,uFlash,uZoom,uGlitch,uSeed,uGrain,uInvert; uniform vec3 uFlashCol; varying vec2 vUv;
+    uniform sampler2D tDiffuse, tLogo; uniform float uAb,uFlash,uZoom,uGlitch,uSeed,uGrain,uInvert,uLogoAmt,uWipe,uAspect,uShine,uVig;
+    uniform vec4 uLogoRect; uniform vec2 uWipeC; uniform vec3 uFlashCol; varying vec2 vUv;
     float h(float n){ return fract(sin(n)*43758.5453); }
     void main(){
       vec2 uv=vUv;
@@ -144,8 +149,16 @@ export const PostShader = {
       }
       c=mix(c,1.0-c,uInvert);
       c=mix(c,uFlashCol,clamp(uFlash,0.0,1.0));
-      c+= (h(dot(vUv,vec2(91.3,47.7))+uSeed)-0.5)*uGrain;
-      float v=smoothstep(1.05,0.35,length(d*vec2(0.9,1.0))); c*=mix(0.72,1.0,v);
+      c+= (h(dot(vUv,vec2(91.3,47.7))+uSeed)-0.5)*uGrain*uVig;
+      float v=smoothstep(1.05,0.35,length(d*vec2(0.9,1.0))); c*=mix(mix(1.0,0.72,uVig),1.0,v);
+      // brand card: radial white wipe from the logo, then the exact vector logo on top
+      if(uWipe>0.0){ vec2 q=(vUv-uWipeC)*vec2(uAspect,1.0); float r=length(q);
+        float ring=smoothstep(uWipe,uWipe-0.012,r); c=mix(c,vec3(1.0),ring);
+        c=mix(c,vec3(0.24,0.65,0.30),smoothstep(0.03,0.0,abs(r-uWipe))*step(0.001,uWipe)*step(uWipe,1.3)); }
+      if(uLogoAmt>0.0){ vec2 lu=(vUv-uLogoRect.xy)/(uLogoRect.zw-uLogoRect.xy);
+        if(lu.x>=0.0&&lu.x<=1.0&&lu.y>=0.0&&lu.y<=1.0){ vec4 L=texture2D(tLogo,lu);
+          float sh = uShine>-0.5 ? smoothstep(0.08,0.0,abs((lu.x+lu.y*0.35)-uShine))*0.55 : 0.0;
+          vec3 lc = L.rgb + sh; c=mix(c,lc,L.a*uLogoAmt); } }
       gl_FragColor=vec4(c,1.0);
     }`,
 };

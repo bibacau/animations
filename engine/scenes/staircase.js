@@ -11,9 +11,9 @@ export class Staircase extends BaseScene {
     const m = this.music, P = m.period;
     const steps = this.words.slice(0, -1), lastW = this.words.at(-1);
     this.steps = steps.map((w, k) => {
-      const o = this.word(w, { height: 1.0, maxWidth: 3.0, depth: 2.2, font: 'anton', combo: [['white', 'purple'], ['yellow', 'red'], ['cyan', 'blue']][k % 3],
+      const o = this.word(w, { height: 1.15, maxWidth: 3.4, depth: 2.2, font: 'anton', combo: [['white', 'purple'], ['yellow', 'red'], ['cyan', 'blue']][k % 3],
         pool: ['rise', 'drop', 'expand', 'unzip', 'swing'] });
-      o.base = { x: k * 1.9, y: k * 0.95 + o.height / 2, z: -k * 0.5 };
+      o.base = { x: k * 2.6, y: k * 1.05 + o.height / 2, z: -k * 0.4 };
       return o;
     });
     const top = this.steps.at(-1).base;
@@ -83,8 +83,8 @@ export class Staircase extends BaseScene {
     // camera climbs diagonally with the performer, punches toward the fridge on the reveal
     const cu = easeOutCubic(clamp((t - this.open) / 0.4));
     const cx = p.x + 0.8 + cu * 0.6, cy = Math.max(1.6, p.y) + 1.6;
-    this.cam.pos.set(cx + 2.6 - cu * 1.2, cy + 1.0, 7.4 - cu * 1.4 + clamp(t - this.collapse) * 5);
-    this.cam.look.set(cx + 0.6, cy - 0.4 + cu * 0.8, -1);
+    this.cam.pos.set(cx + 2.6 - cu * 1.0, cy + 1.1, 8.8 - cu * 2.0 + clamp(t - this.collapse) * 5);
+    this.cam.look.set(cx + 2.4, cy - 0.2 + cu * 0.8, -1);
     this.cam.roll = 0.06 - cu * 0.1;
     this.light.target.set(p.x, p.y, 0);
     this.bg = t >= this.open ? { pattern: 1, a: 0xfff6d0, b: 0x16e0ff, c: 0xffffff, spin: t * 0.3 } : { pattern: 0, a: 0x120a2e, b: 0x7b2cff, c: 0x16e0ff };

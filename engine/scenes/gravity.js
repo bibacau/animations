@@ -10,28 +10,39 @@ export class Gravity extends BaseScene {
     super(ctx, plan);
     this.floor(0xffd400, 200, 0);
     this.items = [];
-    let y = 0;
+    const cols = [0, -5.2, 5.2];               // 16:9: three piles spread across the frame
+    const colY = [0, 0, 0];
     this.words.forEach((w, k) => {
-      const o = this.word(w, { height: 1.05, maxWidth: 4.3 - (k % 3) * 0.4, depth: 1.3, font: k % 2 ? 'bowlby' : 'anton',
+      const ci = k % 3, y = colY[ci];
+      const o = this.word(w, { height: 1.5, maxWidth: 4.8 - (k % 2) * 0.4, depth: 1.4, font: k % 2 ? 'bowlby' : 'anton',
         combo: [['red', 'ink'], ['purple', 'ink'], ['cyan', 'blue'], ['pink', 'purple'], ['white', 'red'], ['lime', 'purple']][k % 6], entrance: { type: 'snap', dur: 0.05 } });
       // land on the 8th-note grid right after the vocal onset -> every landing is a beat
       o.land = this.beatAfter(w.start + 0.16, { half: true });
-      o.rest = { x: (k % 2 ? 0.35 : -0.3) * (k ? 1 : 0), y: y + o.height / 2, ry: (hash(k + 3) - 0.5) * 0.5 };
-      y += o.height + 0.02;
+      o.rest = { x: cols[ci] + (hash(k * 5) - 0.5) * 0.6, y: y + o.height / 2, ry: (hash(k + 3) - 0.5) * 0.5 };
+      colY[ci] += o.height + 0.02;
       this.items.push(o);
     });
-    this.topY = y;
+    this.topY = Math.max(...colY);
     const last = this.items.at(-1);
     this.collapse = this.beatAfter(last.land + 0.12, { half: true });
     if (this.collapse > this.t1 - 0.15) this.collapse = last.land + 0.06;
     // performer keyframes: run in, dodge the first drop, hop on the pile on beats, get launched
     const P = this.music.period, first = this.items[0];
     this.char = this.character('pip', 0.9);
-    const keys = [{ t: this.t0, x: -4.5, y: 0, mode: 'run' }, { t: first.w.start - 0.05, x: -0.2, y: 0, mode: 'run' },
-      { t: first.land, x: 2.9, y: 0, h: 1.6, mode: 'jump' }];
+    const keys = [{ t: this.t0, x: -9, y: 0, mode: 'run' }, { t: first.w.start - 0.05, x: -0.2, y: 0, mode: 'run' },
+      { t: first.land, x: 2.8, y: 0, h: 1.6, mode: 'jump' }];
     let tt = first.land;
-    while (tt + P < this.collapse - 0.05) { tt += P; keys.push({ t: tt, x: 2.9, y: 0, h: 0.5, mode: 'jump' }); }
-    keys.push({ t: this.collapse, x: 2.9, y: 0, mode: 'idle' });
+    // hop between the piles on beats, always away from the pile that is about to be hit
+    const safe = [2.8, -2.8];
+    let side = 0;
+    while (tt + P < this.collapse - 0.05) {
+      tt += P;
+      const incoming = this.items.find((o) => o.land > tt && o.land < tt + P * 1.5);
+      const before = side;
+      if (incoming && Math.abs(incoming.rest.x - safe[side]) < 3) side = 1 - side;
+      keys.push({ t: tt, x: safe[side], y: 0, h: side !== before ? 1.6 : 0.5, mode: 'jump' });
+    }
+    keys.push({ t: this.collapse, x: keys.at(-1).x, y: 0, mode: 'idle' });
     keys.push({ t: this.collapse + 0.9, x: 7, y: 9, h: 0, mode: 'launch' });
     this.keys = keys;
     this.bg = { pattern: 4, a: 0xff2a4d, b: 0xff7a1a, c: 0xffffff };
@@ -40,10 +51,10 @@ export class Gravity extends BaseScene {
     for (const o of this.items) {
       const lvl = this.music.beat(this.music.nearestBeat(o.land)).level;
       this.fx.impact(o.land, 0.35 + lvl * 0.2);
-      this.fx.ring({ t0: o.land, pos: { x: 0, y: 0.05, z: 0 }, maxR: 4 + lvl * 1.5, life: 0.45, color: 0xffffff });
+      this.fx.ring({ t0: o.land, pos: { x: o.rest.x, y: 0.05, z: 0 }, maxR: 4 + lvl * 1.5, life: 0.45, color: 0xffffff });
       this.fx.burst({ t0: o.land, pos: { x: o.rest.x, y: o.rest.y - o.height / 2, z: 0.6 }, n: 30, speed: 5, gravity: 12, life: 0.7, size: 0.13, colors: ['white', 'yellow', 'red'] });
     }
-    this.fx.burst({ t0: this.collapse, pos: { x: 0, y: this.topY / 2, z: 0 }, n: 140, speed: 12, gravity: 10, life: 1.2, size: 0.18, colors: ['red', 'yellow', 'purple', 'white'] });
+    for (const x of [-5.6, 0, 5.6]) this.fx.burst({ t0: this.collapse, pos: { x, y: this.topY / 2, z: 0 }, n: 70, speed: 12, gravity: 10, life: 1.2, size: 0.18, colors: ['red', 'yellow', 'purple', 'white'] });
     this.fx.impact(this.collapse, 1.1); this.fx.flash(this.collapse, 0.35, 12, 0xffd400);
   }
   update(t) {
@@ -61,7 +72,7 @@ export class Gravity extends BaseScene {
       o.group.position.set(r.x, y, 0);
       o.group.rotation.set(0, r.ry, (1 - u) * 0.6 * (k % 2 ? 1 : -1) + Math.sin(t * 5 + k) * 0.02 * clamp(t - o.land));
       o.group.scale.set(1 + sq * 0.6, 1 - sq, 1 + sq * 0.3);
-      if (t >= o.land) top = r.y + o.height / 2;
+      if (t >= o.land) top = Math.max(top, r.y + o.height / 2);
       // collapse: pieces fly apart
       const c = t - this.collapse;
       if (c > 0) {
@@ -82,10 +93,10 @@ export class Gravity extends BaseScene {
     ch.pose(p.mode === 'jump' && p.u > 0.85 ? 'land' : p.mode, m.count(t) * 2, landK);
     if (p.mode === 'launch') ch.root.rotation.z = (t - this.collapse) * 8;
     // camera tracks the growing tower
-    const fy = Math.max(1.6, top * 0.62);
+    const fy = Math.max(2.0, top * 0.55);
     const c = clamp((t - this.collapse) / 0.6);
-    this.cam.pos.set(1.6 + Math.sin(t * 0.7) * 1.0, fy + 1.6 + c * 2, 8.2 + top * 0.45 + c * 3);
-    this.cam.look.set(0.6, fy + 0.2, 0);
+    this.cam.pos.set(Math.sin(t * 0.7) * 1.0, fy + 1.4 + c * 2, 10.5 + top * 0.3 + c * 3);
+    this.cam.look.set(0, fy + 0.1, 0);
     this.cam.fov = 50;
     this.light.target.set(0, fy, 0);
     this.bg.spin = t * 0.2;

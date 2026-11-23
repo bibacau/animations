@@ -18,7 +18,7 @@ export class ProductSlam extends BaseScene {
     this.words.forEach((w, k) => {
       const kind = PRODUCT_WORDS[w.text];
       const lastWord = k === N - 1;
-      const o = this.word(w, { height: kind ? 1.4 : 1.15, maxWidth: kind ? 5 : 3.6, depth: 1.2, font: kind || lastWord ? 'bowlby' : 'anton' });
+      const o = this.word(w, { height: kind ? 1.6 : 1.35, maxWidth: kind ? 5.6 : 4.2, depth: 1.2, font: kind || lastWord ? 'bowlby' : 'anton' });
       o.base = { x: x + o.width / 2, y: o.height / 2, z: (k % 2) * -1.2 };
       x += o.width + 1.3;
       o.kind = kind; o.lastWord = lastWord;
@@ -76,7 +76,7 @@ export class ProductSlam extends BaseScene {
       if (o.bounceOff) {           // bounce off the previous product, landing beside it on beats
         const b = o.bounceOff, lt = t - o.w.start, P = m.period;
         const hop = Math.abs(Math.sin(Math.PI * Math.min(lt / P, 3))) * 2.6 * decay(lt, 0.9);
-        y = b.height * 0.6 + o.height / 2 + 2.8 + hop; x = b.base.x + 0.2; z = b.base.z + 1.6;
+        y = b.height * 0.6 + o.height / 2 + 2.8 + hop; x = b.base.x + 0.2; z = b.base.z + 0.6;
       }
       if (o.lastWord) {
         const u = clamp((t - o.w.start) / 0.35);
@@ -99,7 +99,7 @@ export class ProductSlam extends BaseScene {
     const u = easeOutCubic(clamp((t - focus.w.start + 0.25) / 0.45));
     const cx = prev.base.x + (fx_ - prev.base.x) * u;
     const near = focus.prod ? 1 : 0;
-    this.cam.pos.set(cx + 2.4, 2.6 + near * 1.4, 7.6 + near * 1.6);
+    this.cam.pos.set(cx + 1.6, 2.6 + near * 1.3, 8.6 + near * 1.6);
     this.cam.look.set(cx, 1.5 + near * 0.9, focus.base.z);
     this.cam.roll = 0.05;
     this.light.target.set(cx, 0, 0);

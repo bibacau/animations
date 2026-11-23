@@ -13,8 +13,8 @@ export class Elevator extends BaseScene {
     this.drop = m.drop;
     const W = this.words;
     this.lift = this.word(W[0], { height: 0.9, maxWidth: 3.6, depth: 2.4, font: 'bowlby', combo: ['yellow', 'red'], entrance: { type: 'rise', dur: 0.25 } });
-    this.ceiling = this.word(W.at(-1), { height: 1.6, maxWidth: 4.8, depth: 1.0, font: 'bowlby', combo: ['white', 'red'], entrance: { type: 'smash', dur: 0.12 } });
-    this.floors = W.slice(1, -1).map((w, k) => this.word(w, { height: 1.0, maxWidth: 3.2, depth: 0.6, combo: [['cyan', 'blue'], ['pink', 'purple'], ['lime', 'purple'], ['orange', 'red']][k % 4],
+    this.ceiling = this.word(W.at(-1), { height: 2.0, maxWidth: 9, depth: 1.0, font: 'bowlby', combo: ['white', 'red'], entrance: { type: 'smash', dur: 0.12 } });
+    this.floors = W.slice(1, -1).map((w, k) => this.word(w, { height: 1.4, maxWidth: 4.2, depth: 0.6, combo: [['cyan', 'blue'], ['pink', 'purple'], ['lime', 'purple'], ['orange', 'red']][k % 4],
       pool: ['fly', 'snap', 'stretch', 'flip', 'expand'] }));
     this.char = this.character('pip', 0.8);
     this.prods = ['tv', 'washer', 'fridge', 'rice'].map((k) => { const p = this.product(k); p.visible = false; return p; });
@@ -57,7 +57,7 @@ export class Elevator extends BaseScene {
       this.lyric(o, t);
       const yAt = this.liftY(o.w.start);
       const side = k % 2 ? 1 : -1;
-      o.group.position.set(side * 1.3, yAt + 2.0 + (k % 2) * 0.6, -1.6 + k * 0.15);
+      o.group.position.set(side * 4.6, yAt + 1.6 + (k % 2) * 0.8, -1.2 + k * 0.15);
       o.group.rotation.set(0, side * -0.35, side * 0.05);
       if (after > 0) o.group.visible = false;
     });
@@ -90,18 +90,20 @@ export class Elevator extends BaseScene {
       if (!p.visible) return;
       const a = i / 4 * Math.PI * 2 + 0.6;
       const u = easeOutCubic(clamp(after / 1.0));
-      p.position.set(Math.cos(a) * 7 * u, top + Math.sin(a) * 5 * u - 1.5, 1 + 6 * u);
+      p.position.set(Math.cos(a) * 11 * u, top + Math.sin(a) * 5 * u - 1.5, 1 + 5 * u);
       p.rotation.set(after * 2.5 * (i % 2 ? 1 : -1), after * 3, after * 1.5);
       p.scale.setScalar(0.5 + 0.4 * u);
     });
     // camera: rides up with the lift looking up the shaft; on the drop it is thrown back
     const shake = m.build(t) * 0.08;
-    this.cam.pos.set(Math.sin(t * 40) * shake + (launch ? 0 : 1.8), y + 1.2 + (launch ? 4 * easeOutCubic(after) : 0), 8.5 + (launch ? 9 * easeOutExpo(after / 0.8) : 0));
+    this.cam.pos.set(Math.sin(t * 40) * shake + (launch ? 0 : 0.8), y + 1.2 + (launch ? 4 * easeOutCubic(after) : 0), 10 + (launch ? 9 * easeOutExpo(after / 0.8) : 0));
     this.cam.look.set(0, y + 2.6 + (launch ? 4 : 0), 0);
     this.cam.fov = launch ? 58 : 50 - m.build(t) * 8;
     this.cam.roll = launch ? after * 0.4 : Math.sin(t * 2) * 0.03;
     this.light.target.set(0, y + 1, 0);
     this.bg = launch ? { pattern: 1, a: 0xff2a4d, b: 0xffd400, c: 0xffffff, spin: after * 2 } : { pattern: 3, a: 0x15112a, b: 0x2a1a55, c: 0xffd400, spin: -y * 0.3 };
     this.invert = launch ? decay(after, 18) : 0;
+    // background typography scrolls down as the lift climbs (vertical speed reads as height)
+    this.bgType = launch ? { amt: 0.25, color: 0xffffff, style: 'fill', angle: -0.2, speed: 300 } : { amt: 0.14 + m.build(t) * 0.12, color: 0xffd400, style: 'outline', angle: 0, scrollY: y * 70, speed: 20 };
   }
 }

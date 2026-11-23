@@ -14,7 +14,9 @@ export class WasherVortex extends BaseScene {
     this.washer = this.product('washer'); this.washer.scale.setScalar(S);
     this.S = S;
     this.door = { x: 0, y: this.washer.userData.S * 0.5 * S, z: this.washer.userData.S * 0.5 * S + 0.05 };
-    this.tv = this.product('tv'); this.tv.scale.setScalar(0.9);
+    this.tv = this.product('tv'); this.tv.scale.setScalar(1.1);
+    this.fridge = this.product('fridge'); this.fridge.scale.setScalar(1.15); this.fridge.position.set(9.5, 0, -1.5); this.fridge.rotation.y = -0.5;
+    this.rice = this.product('rice'); this.rice.position.set(-9.8, 0, -0.5); this.rice.rotation.y = 0.4;
     this.floor(0x2a5bff, 300, 0);
     const wi = W.findIndex((w) => /WASHER/.test(w.text));
     this.wrapIdx = wi >= 0 ? wi : Math.floor(W.length / 2);
@@ -23,7 +25,7 @@ export class WasherVortex extends BaseScene {
       const o = this.word(w, { height: wrap ? 0.75 : last ? 1.5 : 1.25, maxWidth: wrap ? 99 : 4.6, font: last || k % 2 ? 'bowlby' : 'anton', depth: 0.6,
         pool: ['fly', 'drop', 'expand', 'snap', 'unzip', 'roll'] });
       o.role = wrap ? 'wrap' : last ? 'spit' : k < this.wrapIdx ? 'suck' : 'suck';
-      o.slot = { x: 0, y: this.door.y + (k % 2 ? -1.3 : 1.7), z: this.door.z + 2.2 };
+      o.slot = { x: (k % 2 ? 1 : -1) * 6.0, y: this.door.y + (k % 2 ? -0.6 : 0.9), z: this.door.z + 1.2 };
       // sucked into the drum on the first strong beat after its onset (+ at least one beat on screen)
       if (o.role === 'suck') o.suck = Math.min(this.beatAfter(w.end + 0.1, { minLevel: 1 }), (W[k + 2]?.start ?? this.t1) - 0.05);
       return o;
@@ -50,7 +52,7 @@ export class WasherVortex extends BaseScene {
     this.washer.scale.setScalar(this.S * (1 + m.kick(t) * 0.025));
     // TV slides in from the side and strobes on hats while "FLASHING"
     const tvIn = easeOutBack(clamp((t - this.words[0].start + 0.1) / 0.4), 1.5);
-    this.tv.position.set(-9 + tvIn * 5.6, 1.45, D.z + 0.6);
+    this.tv.position.set(-14 + tvIn * 6.4, 1.6, D.z - 1.5);
     this.tv.rotation.y = 0.5;
     const fw = this.flashWord;
     const strobing = fw && t >= fw.start && t < fw.end + 0.6;
@@ -90,12 +92,15 @@ export class WasherVortex extends BaseScene {
     const roll = t > this.spinStart ? -Math.min(sp * 0.08, 3) : 0;
     const dv = easeInExpo(clamp((t - this.dive) / 0.4));
     const pull = this.items.at(-1).w.start <= t ? easeOutCubic(clamp((t - this.items.at(-1).w.start) / 0.4)) * 3 : 0;
-    this.cam.pos.set(Math.sin(t * 0.8) * 1.2 * (1 - dv), D.y + 0.6 * (1 - dv), D.z + 13 + pull - dv * (13 + pull - 0.6));
+    this.cam.pos.set(Math.sin(t * 0.8) * 1.5 * (1 - dv), D.y + 0.8 * (1 - dv), D.z + 14 + pull - dv * (14 + pull - 0.6));
     this.cam.look.set(0, D.y, D.z);
     this.cam.fov = 50 + dv * 20;
     this.cam.roll = roll + dv * 2;
     this.zoomBlur = dv * 0.6 + clamp(sp / 40) * 0.15;
     this.light.target.set(0, D.y, 0);
     this.bg.spin = sp * 0.05;
+    this.fridge.userData.doors.forEach((d, i) => { d.rotation.y = -Math.max(0, springHit(t - m.beatTime(m.beatIndex(t)), 12, 6)) * 0.5 * (i + 1) * clamp(t - this.spinStart); });
+    this.rice.userData.lid.rotation.x = -Math.max(0, springHit(t - m.beatTime(m.beatIndex(t)), 14, 7)) * 0.6;
+    this.bgType = { amt: 0.15, color: 0xffffff, style: 'outline', angle: -sp * 0.01 };
   }
 }

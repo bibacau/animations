@@ -3,7 +3,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Familjen+Grotesk:wght@400;600&family=JetBrains+Mono:wght@500&display=swap">
 <style>
-  /* Layout: a stage (phone-shaped player) beside a beat-ruled setlist of scenes; stacks on phones. */
+  /* Layout: a full-width 16:9 stage with a beat ruler under it, then the scene setlist in a wrapping grid. */
   :root {
     --bg: #0d0820; --panel: #170f33; --line: #2c2156; --fg: #f6f4ff; --muted: #a59cc9;
     --yellow: #ffd400; --red: #ff2a4d; --cyan: #16e0ff;
@@ -20,11 +20,10 @@
   h1 { font-family: var(--display); font-weight: 400; font-size: clamp(44px, 9vw, 84px); line-height: .9; margin: 0; letter-spacing: .01em; text-wrap: balance; }
   h1 span { color: var(--yellow); text-shadow: 4px 4px 0 var(--red); }
   .meta { font-family: var(--mono); font-size: 12px; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; }
-  .main { display: grid; grid-template-columns: minmax(0, 400px) minmax(0, 1fr); gap: 32px; align-items: start; }
-  @media (max-width: 760px) { .main { grid-template-columns: minmax(0, 1fr); } }
-  .stage { position: relative; aspect-ratio: 9 / 16; width: 100%; max-width: 100%; border-radius: 18px; overflow: hidden; background: #000;
+  .main { display: grid; grid-template-columns: minmax(0, 1fr); gap: 32px; }
+  .stage { position: relative; aspect-ratio: 16 / 9; width: 100%; max-width: 100%; border-radius: 14px; overflow: hidden; background: #000;
     box-shadow: 0 0 0 2px var(--line), 10px 10px 0 var(--red), 10px 10px 0 2px var(--line); }
-  @media (max-width: 760px) { .stage { max-width: 420px; justify-self: center; box-shadow: 0 0 0 2px var(--line); } }
+  @media (max-width: 760px) { .stage { box-shadow: 0 0 0 2px var(--line); border-radius: 10px; } }
   video { width: 100%; height: 100%; display: block; object-fit: cover; }
   .beatbar { display: flex; gap: 2px; height: 18px; align-items: end; margin-top: 12px; }
   .beatbar i { flex: 1; background: var(--line); border-radius: 1px; transition: background .08s; }
@@ -33,7 +32,7 @@
   .beatbar i.on.d { background: var(--red); }
   .list h2 { font-family: var(--display); font-weight: 400; font-size: 28px; margin: 0 0 4px; letter-spacing: .02em; }
   .list p.sub { color: var(--muted); margin: 0 0 16px; max-width: 60ch; }
-  ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+  ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px 16px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 440px), 1fr)); }
   li button { all: unset; box-sizing: border-box; cursor: pointer; width: 100%; display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 4px 14px;
     padding: 10px 12px; border-left: 3px solid transparent; border-radius: 0 8px 8px 0; }
   li button:hover { background: var(--panel); }
@@ -55,7 +54,7 @@
 <div class="wrap">
   <header>
     <h1><span>T-POT</span> Lyric World</h1>
-    <div class="meta">117 BPM · 49.9 s · 9:16 · every hit on the beat</div>
+    <div class="meta">117 BPM · 49.9 s · 16:9 · every hit on the beat</div>
   </header>
 
   <div class="main">
@@ -90,7 +89,7 @@
     [30.57, "TV's flashing, washers going non-stop", 'Words get sucked into the washer drum, wrap around the door and get spat back out.'],
     [34.66, "Low prices, oh yeah, that's the plot", 'Word dominoes topple on 8th notes. The last one lands on the downbeat.'],
     [38.77, 'You want the best deal, head to T-POT', 'The slide builds itself in front of the rider, who lands on "T-POT" on the beat.'],
-    [42.87, 'Instrumental outro', 'Letter race, the T-POT logo reassembles, products slam down, final impact.'],
+    [42.87, 'Instrumental outro', 'The real logo pieces race in, assemble in 3D, and a white wipe out of the O reveals the T-POT logo.'],
   ];
   const DROP = 24.41, BPM_PERIOD = 0.5129, PHASE = 0.305, BAR_OFF = 3, DUR = 49.85;
   const v = document.getElementById('v'), ol = document.getElementById('scenes');

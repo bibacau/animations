@@ -10,7 +10,7 @@ export class Kinetic extends BaseScene {
     this.items = [];
     groupRows(this.words).forEach((row, r) => {
       const objs = row.map((w) => this.word(w, { height: 1.3, font: r % 2 ? 'bowlby' : 'anton', depth: 0.7 }));
-      const xs = this.layoutRow(objs, 4.6);
+      const xs = this.layoutRow(objs, 9);
       objs.forEach((o, k) => { o.slot = { x: xs[k], y: -r * 1.9, z: 0 }; this.items.push(o); });
     });
     this.shadowFloor(-20, 0);

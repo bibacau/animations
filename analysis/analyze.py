@@ -56,10 +56,14 @@ def main():
     full = librosa.onset.onset_strength(S=librosa.amplitude_to_db(S), sr=SR, hop_length=HOP)
     full = full / (np.percentile(full, 99.5) + 1e-9)
 
-    # vocal band from the mid (center) channel, lightly de-drummed by subtracting side
+    # vocal onset envelope: centre (mid) channel -> harmonic/percussive separation removes
+    # the drums -> spectral flux in the vocal band of the harmonic part only
     mid = stereo.mean(1)
-    Sm = np.abs(librosa.stft(mid, n_fft=2048, hop_length=HOP))
-    vocal = band_flux(Sm, freqs, 250, 3500)
+    Sm = librosa.stft(mid, n_fft=2048, hop_length=HOP)
+    Hm, _ = librosa.decompose.hpss(Sm, margin=(1.0, 3.0))
+    Hm = np.abs(Hm)
+    vocal = band_flux(Hm, freqs, 200, 4000)
+    vocal = np.convolve(vocal, [0.25, 0.5, 0.25], mode="same")
 
     # ---- tempo + phase-locked grid -------------------------------------------------
     tempo, _ = librosa.beat.beat_track(y=y, sr=SR, hop_length=HOP, tightness=200)
@@ -144,8 +148,13 @@ def main():
     sheet = [(li, tok) for li, l in enumerate(lines) for tok in l.split()]
     assert len(sheet) == len(merged), (len(sheet), len(merged))
 
-    voc_peaks = peaks(vocal, times, 0.08, 4)
-    vp = np.array([p["t"] for p in voc_peaks])
+    voc_peaks = peaks(vocal, times, 0.05, 3)
+    vp = np.array([p["t"] for p in voc_peaks]); vv = np.array([p["v"] for p in voc_peaks])
+    # 16th-note grid built from the (onset-aligned) beats
+    sixteenths = []
+    for a, b in zip(beats, beats[1:] + [beats[-1] + period]):
+        sixteenths += [a + (b - a) * q / 4 for q in range(4)]
+    sixteenths = np.array(sixteenths)
     words = []
     for k, ((li, tok), w) in enumerate(zip(sheet, merged)):
         s, e = w["s"], w["e"]
@@ -153,19 +162,28 @@ def main():
         est = 0.16 + 0.065 * len(clean)          # plausible sung length of the word
         if e - s > est + 0.35:                   # ASR swallowed a gap -> start is too early
             s = e - est - 0.2
-        # snap to the nearest vocal onset in [s-0.04, s+0.18] -- only ever later-or-equal-ish
-        cand = vp[(vp >= s - 0.04) & (vp <= s + 0.18)]
-        if len(cand):
-            s = float(cand[0])
+        asr_s = s
+        # strongest nearby vocal onset (ASR word starts are typically +-100 ms off)
+        win = (vp >= s - 0.12) & (vp <= s + 0.16)
+        if win.any():
+            score = vv[win] - 2.5 * np.abs(vp[win] - s)
+            s = float(vp[win][np.argmax(score)])
+        # singers phrase on the grid: snap to the 16th grid when the onset is within 45 ms
+        g = sixteenths[np.argmin(np.abs(sixteenths - s))]
+        snapped = abs(g - s) <= 0.045
+        if snapped:
+            s = float(g)
         prev_e = words[-1]["end"] if words else 0
         s = max(s, prev_e - 0.02)
+        s = min(s, e - 0.06)
         nb = min(out_beats, key=lambda b: abs(b["t"] - s))
         seg = (times >= s) & (times <= e)
         inten = float(energy[seg].mean()) if seg.any() else 0.5
         words.append({"i": k, "line": li, "text": clean, "display": tok.rstrip(","),
                       "start": round(s, 3), "end": round(e, 3), "dur": round(e - s, 3),
                       "nearBeat": nb["i"], "beatOffset": round(s - nb["t"], 3),
-                      "intensity": round(inten, 3), "asrProb": w["p"]})
+                      "intensity": round(inten, 3), "asrProb": w["p"],
+                      "asrStart": round(asr_s, 3), "gridSnapped": bool(snapped)})
 
     phrases = []
     for li, l in enumerate(lines):
@@ -212,7 +230,7 @@ def main():
     print("sections", [(s["name"], s["start"], s["end"], s["energy"]) for s in sections])
     print("levels", np.bincount([b["level"] for b in out_beats]))
     for w in words:
-        print(f'{w["display"]:>10} {w["start"]:6.2f}-{w["end"]:6.2f} beatOff {w["beatOffset"]:+.2f}')
+        print(f'{w["display"]:>10} {w["start"]:6.2f}-{w["end"]:6.2f} asr {w["asrStart"]:6.2f} beatOff {w["beatOffset"]:+.3f} {"GRID" if w["gridSnapped"] else ""}')
 
 
 if __name__ == "__main__":

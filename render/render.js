@@ -12,7 +12,7 @@ const path = require('path');
 const { start } = require('./serve');
 
 const args = Object.fromEntries(process.argv.slice(2).reduce((a, v, i, arr) => (v.startsWith('--') ? [...a, [v.slice(2), arr[i + 1]]] : a), []));
-const fps = +(args.fps || 30), W = +(args.w || 1080), H = +(args.h || 1920);
+const fps = +(args.fps || 30), W = +(args.w || 1920), H = +(args.h || 1080);
 const ROOT = path.resolve(__dirname, '..');
 const OUT = path.resolve(ROOT, args.out || 'output/tpot_lyric_world.mp4');
 const blur = +(args.blur || 1);
@@ -21,7 +21,7 @@ const blur = +(args.blur || 1);
   const srv = await start(0);
   const url = `http://127.0.0.1:${srv.address().port}/?w=${W}&h=${H}${args.seed ? '&seed=' + args.seed : ''}`;
   const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
-  const page = await browser.newPage({ viewport: { width: 540, height: 960 } });
+  const page = await browser.newPage({ viewport: { width: 960, height: 540 } });
   page.on('console', (m) => { if (m.type() === 'error' || m.text().startsWith('PLAN')) console.log('[page]', m.text()); });
   page.on('pageerror', (e) => console.log('[pageerror]', e.message));
   await page.goto(url);

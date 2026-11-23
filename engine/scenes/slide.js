@@ -15,7 +15,7 @@ export class Slide extends BaseScene {
     this.nrm = { x: -Math.sin(this.ang), y: Math.cos(this.ang) };
     let s = 0;
     this.segs = ramp.map((w, k) => {
-      const o = this.word(w, { height: 1.0, maxWidth: 4.2, depth: 2.6, font: k % 2 ? 'bowlby' : 'anton',
+      const o = this.word(w, { height: 1.2, maxWidth: 5, depth: 2.8, font: k % 2 ? 'bowlby' : 'anton',
         combo: [['yellow', 'red'], ['white', 'purple'], ['cyan', 'blue'], ['lime', 'purple'], ['pink', 'purple']][k % 5], pool: ['unzip', 'expand', 'rise', 'drop', 'stretch', 'flip'] });
       o.s0 = s; s += o.width + 0.12; o.s1 = s;
       return o;
@@ -28,8 +28,8 @@ export class Slide extends BaseScene {
     if (this.landT > this.t1 - 0.1) this.landT = this.beatAfter(fin.start + 0.1, { half: true });
     this.launchT = Math.min(this.landT - this.music.period * 0.9, Math.max(this.arrive.at(-1) + 0.25, this.landT - this.music.period * 1.5));
     const end = this.pt(this.total, 1);
-    this.fin = this.word(fin, { height: 1.7, maxWidth: 4.8, depth: 1.6, font: 'bowlby', combo: ['red', 'yellow'], entrance: { type: 'smash', dur: 0.14 } });
-    this.finPos = { x: end.x + 3.2, y: end.y - 4.2 };
+    this.fin = this.word(fin, { height: 2.2, maxWidth: 7, depth: 1.6, font: 'bowlby', combo: ['red', 'yellow'], entrance: { type: 'smash', dur: 0.14 } });
+    this.finPos = { x: end.x + 4.5, y: end.y - 4.2 };
     this.char = this.character('pip', 0.8);
     this.bg = { pattern: 1, a: 0xff2a4d, b: 0xff7a1a, c: 0xffd400 };
   }
@@ -83,8 +83,8 @@ export class Slide extends BaseScene {
     ch.pose(mode, m.count(t), mode === 'cheer' ? decay(t - this.landT, 8) : 0);
     // camera tracks the slide, then pulls back for the landing
     const back = easeOutCubic(clamp((t - this.landT + 0.3) / 0.6));
-    this.cam.pos.set(pos.x + 1.8 + back, pos.y + 1.8 + back, 7.4 + back * 3);
-    this.cam.look.set(pos.x + 0.9, pos.y - 0.6, 0);
+    this.cam.pos.set(pos.x + 3.2 + back, pos.y + 1.6 + back, 11 + back * 2);
+    this.cam.look.set(pos.x + 3.6, pos.y - 1.2, 0);
     this.cam.roll = this.ang * 0.25 * (1 - back);
     this.light.target.set(pos.x, pos.y, 0);
     this.bg.spin = t * 0.4;

@@ -33,7 +33,10 @@ export class BaseScene {
   /** standard lyric lifecycle: enter at the vocal onset; optional exit. Letters reset each frame. */
   lyric(obj, t, exitAt = null, exitSpec = null) {
     obj.reset();
-    const visible = applyEntrance(obj, t - obj.w.start, obj.entrance);
+    // the entrance is centred on the vocal onset: its main impact (most of the ease-out)
+    // lands exactly when the word is sung, instead of finishing after it
+    const lead = Math.min(0.06, obj.entrance.dur * 0.38);
+    const visible = applyEntrance(obj, t - (obj.w.start - lead), obj.entrance);
     if (exitAt != null && t >= exitAt) {
       if (applyExit(obj, t - exitAt, exitSpec || obj.exitSpec)) obj.group.visible = false;
     }

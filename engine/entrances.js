@@ -24,8 +24,8 @@ export function chooseEntrance(rng, prev, word, opts = {}) {
   return {
     type, prevType: prev?.type, dir: { x: d[0], y: d[1] }, axis: rng() < 0.5 ? 'x' : 'y',
     order: ['fwd', 'rev', 'mid', 'rand'][Math.floor(rng() * 4)],
-    stagger: fast ? 0.012 : 0.02 + rng() * 0.035,
-    dur: fast ? 0.14 : 0.18 + rng() * 0.14,
+    stagger: fast ? 0.008 : 0.012 + rng() * 0.02,
+    dur: fast ? 0.12 : 0.14 + rng() * 0.1,
     amp: 0.7 + rng() * 0.6,
   };
 }

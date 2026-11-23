@@ -6,7 +6,8 @@ elevator floors, tunnel walls and washing-machine spin cycles. Tiny performers a
 CGI T-POT appliances interact with them, and every jump, landing, crash, camera move
 and cut is placed on a timestamp taken from the audio analysis.
 
-Output: `output/tpot_lyric_world.mp4` (1080×1920, 30 fps, H.264 + AAC, ~50 s).
+Output: `output/tpot_lyric_world.mp4` (1920×1080 16:9, 30 fps, H.264 + AAC, ~50 s).
+Watch page: `site/index.html` (plays `site/video.mp4`).
 
 ## Pipeline
 
@@ -33,8 +34,11 @@ render/render.js  headless Chromium renders frame t = n/fps, pipes it to ffmpeg,
 - **Energy and sections**: RMS energy curve; intro, verse, chorus and outro; the drop is the
   largest bar-to-bar energy jump; the build-up is the two bars before it; vocal pauses are detected.
 - **Words**: each word has start, end, duration, nearest beat, offset from that beat and
-  intensity. Onsets come from Whisper and are pushed later when Whisper has absorbed a
-  gap, then snapped to the vocal-band onset, so words never appear before the singer.
+  intensity. Whisper gives a rough start. The real onset is then found in a vocal-only
+  envelope (centre channel, drums removed by harmonic/percussive separation, 200 Hz–4 kHz flux).
+  Onsets within 45 ms of the 16th-note grid snap onto it, since singers phrase on the grid.
+- **Entrance timing**: each lyric's entrance is centred on its onset, so the visible impact
+  lands exactly when the word is sung, instead of the animation finishing after it.
 
 ### Sync rules used by the engine
 | Musical event | Visual response |
@@ -66,7 +70,7 @@ the fridge door bursts open and the stairs collapse) · `elevator` (build-up rid
 `tunnel` (endless typography tunnel; walls flip to the sung word; a character rides a letter past; "STOP" freezes it) ·
 `washer` (words get sucked into the drum, wrap around the door, then get spat back out) · `domino` (words topple on 8th notes;
 the last one lands on the downbeat) · `slide` (the ramp builds in front of a sliding rider, who lands on the final word) ·
-`finale` (letter race, logo reassembly, final impact) · `kinetic` (pure typography, also the fallback).
+`finale` (the real logo's pieces race in, assemble in 3D, then a radial wipe out of the O reveals the flat brand logo) · `kinetic` (pure typography, also the fallback).
 
 ## Usage
 ```bash
@@ -77,6 +81,17 @@ node render/serve.js 8080             # live preview: http://127.0.0.1:8080/?pre
 node render/render.js --blur 2        # full render with 2-sub-frame motion blur
 node render/render.js --stills 12.5,24.41   # look-dev stills -> output/stills/
 ```
+
+### Full-frame design
+Every scene is composed for 16:9. Lyrics spread across the width: side screens, piles,
+platforms, a domino line and an elliptical tunnel. A background typography layer repeats
+the words already sung in the current phrase, in giant rows that step on every kick, so the
+whole frame stays part of the lyric world without anything appearing before it is sung.
+
+### Logo
+`tools/trace_logo.py` traces the supplied artwork (`assets/tpot_logo_src.png`) into vector
+paths (`assets/tpot_logo.json`). The engine uses them twice: extruded into 3D for the race and
+assembly, and drawn crisp at full resolution, in the exact brand colours, for the end card.
 
 ### Lyrics
 The lyrics are the actual English vocal, transcribed word by word with Whisper. They are
