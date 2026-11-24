@@ -1,0 +1,12 @@
+{
+  "name": "tpot-2d-music-video",
+  "private": true,
+  "version": "1.0.0",
+  "description": "T-POT 2D beat-synced music video (canvas, rendered frame by frame)",
+  "scripts": {
+    "preview": "node render/serve.js 8080",
+    "render": "node render/render.js",
+    "audit": "node render/render.js --audit 1",
+    "analyze": "python3 analysis/analyze.py"
+  }
+}

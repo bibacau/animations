@@ -1,0 +1,84 @@
+<title>T-POT 2D Video</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bowlby+One&family=Familjen+Grotesk:wght@400;600&display=swap">
+<style>
+  /* Layout: one 16:9 player with a beat ruler, then the scene list in a wrapping grid. */
+  :root { --bg: #1b1035; --panel: #26184a; --line: #3a2a66; --fg: #fff7ea; --muted: #b9acd9; --yellow: #ffd400; --red: #e41b24; --green: #3ea74d;
+    --display: 'Bowlby One', Impact, sans-serif; --body: 'Familjen Grotesk', system-ui, sans-serif; color-scheme: dark; }
+  html { background: var(--bg); }
+  body { background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 15px; line-height: 1.5;
+    padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 24px 48px; }
+  .wrap { max-width: 980px; margin: 0 auto; display: grid; gap: 22px; }
+  h1 { font-family: var(--display); font-weight: 400; font-size: clamp(36px, 7vw, 64px); line-height: 1; margin: 0; text-wrap: balance; }
+  h1 .r { color: var(--red); text-shadow: 3px 3px 0 #fff; } h1 .g { color: var(--green); }
+  .sub { color: var(--muted); margin: 6px 0 0; }
+  .stage { aspect-ratio: 16 / 9; width: 100%; max-width: 100%; border-radius: 14px; overflow: hidden; background: #000; box-shadow: 0 0 0 3px var(--line), 8px 8px 0 var(--red); }
+  video { width: 100%; height: 100%; display: block; }
+  .beats { display: flex; gap: 3px; height: 16px; align-items: end; margin-top: 10px; }
+  .beats i { flex: 1; background: var(--line); border-radius: 2px; height: 55%; }
+  .beats i.d { height: 100%; } .beats i.on { background: var(--yellow); } .beats i.on.d { background: var(--red); }
+  .btns { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+  button.b { font: 600 14px var(--body); border: 0; border-radius: 10px; padding: 10px 14px; cursor: pointer; background: var(--yellow); color: #1b1035; }
+  button.b.ghost { background: transparent; color: var(--fg); box-shadow: inset 0 0 0 2px var(--line); }
+  button:focus-visible { outline: 2px solid var(--yellow); outline-offset: 2px; }
+  ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px 14px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 420px), 1fr)); }
+  ol button { all: unset; box-sizing: border-box; cursor: pointer; width: 100%; display: grid; grid-template-columns: 52px minmax(0, 1fr); gap: 2px 12px; padding: 9px 12px; border-radius: 10px; border-left: 4px solid transparent; }
+  ol button:hover { background: var(--panel); }
+  ol button:focus-visible { outline: 2px solid var(--yellow); }
+  li.cur button { background: var(--panel); border-left-color: var(--yellow); }
+  .t { color: var(--yellow); font-variant-numeric: tabular-nums; font-weight: 600; padding-top: 2px; }
+  .ly { font-family: var(--display); font-size: 16px; line-height: 1.2; }
+  .what { grid-column: 2; color: var(--muted); font-size: 13.5px; }
+  h2 { font-family: var(--display); font-weight: 400; font-size: 24px; margin: 0 0 8px; }
+  @media (prefers-reduced-motion: reduce) { .beats i { transition: none; } }
+</style>
+<div class="wrap">
+  <header>
+    <h1><span class="r">T-POT</span> <span class="g">2D</span> Music Video</h1>
+    <p class="sub">Flat cartoon version, 854×480. Every drop, stamp, slam and cut lands on the beat.</p>
+  </header>
+  <div>
+    <div class="stage"><video id="v" src="video.mp4" controls playsinline preload="auto"></video></div>
+    <div class="beats" id="bb" aria-hidden="true"></div>
+    <div class="btns"><button class="b" id="play" type="button">Play with sound</button><button class="b ghost" id="drop" type="button">Jump to the drop</button></div>
+  </div>
+  <section>
+    <h2>Scenes</h2>
+    <ol id="list"></ol>
+  </section>
+</div>
+<script>
+  const S = [
+    [0.0, 'T-POT, T-POT, turn it on', 'Three grey T-POTs: right, left, middle. Pull the cord and they turn green, then switch colours.'],
+    [4.92, 'Lowest prices come and be gone', 'TV with an RM6,000 tag, slashed, replaced by RM3,000.'],
+    [7.99, 'Walking down the street, saw a neon light', 'Pip hops across the lyrics through a neon city and flies into the T-POT store.'],
+    [12.62, "Said TV's and washers, price just right", 'A TV and a washer drop in with cheap prices. Pip is totally shocked.'],
+    [17.23, "I stepped inside, couldn't believe my eyes", 'Zoom into the face, cosmic eyes, then a dive into the eye.'],
+    [21.85, "T-POT's deals took me by surprise", 'Mimi gets surprised, then throws her hands up on the drop.'],
+    [25.44, 'T-POT, where the savings never stop', 'A whole crowd waves and jumps on every beat.'],
+    [30.57, "TV's flashing, washers going non-stop", 'Pip becomes a flashing TV. Zoom into the screen, the washer, then a crazy spin.'],
+    [34.66, "Low prices, oh yeah, that's the plot", 'Price board: the prices roll and drop on every beat.'],
+    [38.77, 'You want the best deal, head to T-POT', 'The road speeds up to a blur, stops dead, and we arrive at T-POT.'],
+    [42.87, 'Instrumental outro', 'The logo letters run on little legs and become the T-POT logo.'],
+  ];
+  const v = document.getElementById('v'), list = document.getElementById('list');
+  S.forEach(([t, ly, what]) => {
+    const li = document.createElement('li');
+    li.innerHTML = `<button type="button"><span class="t"></span><span class="ly"></span><span class="what"></span></button>`;
+    li.querySelector('.t').textContent = `0:${t.toFixed(0).padStart(2, '0')}`;
+    li.querySelector('.ly').textContent = ly; li.querySelector('.what').textContent = what;
+    li.querySelector('button').onclick = () => { v.currentTime = t + 0.01; v.play().catch(() => {}); };
+    list.appendChild(li);
+  });
+  const bb = document.getElementById('bb'), ticks = [];
+  for (let i = 0; i < 16; i++) { const e = document.createElement('i'); if (i % 4 === 0) e.className = 'd'; bb.appendChild(e); ticks.push(e); }
+  const items = [...list.children];
+  (function tick() {
+    const t = v.currentTime, n = Math.floor((t - 0.305) / 0.5129) - 3, f = (t - 0.305) / 0.5129 % 1;
+    ticks.forEach((e, i) => e.classList.toggle('on', t > 0.3 && i === ((n % 16) + 16) % 16 && f < 0.35));
+    let c = 0; S.forEach(([s], i) => { if (t >= s) c = i; }); items.forEach((li, i) => li.classList.toggle('cur', i === c));
+    requestAnimationFrame(tick);
+  })();
+  document.getElementById('play').onclick = () => { v.muted = false; v.play().catch(() => {}); };
+  document.getElementById('drop').onclick = () => { v.currentTime = 22.3; v.muted = false; v.play().catch(() => {}); };
+</script>
