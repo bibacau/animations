@@ -1,6 +1,6 @@
 // Backgrounds & decorations: parallax city, T-POT store building, sky, confetti, bunting,
 // balloons, sparkles, speed lines, sunburst. All deterministic in t.
-import { W, H, INK, rr, circle, fillStroke, star, popText, rng, hash, COL, RAINBOW, clamp } from './core.js';
+import { W, H, INK, rr, circle, fillStroke, star, popText, rng, hash, COL, RAINBOW, clamp, springHit } from './core.js';
 import { heart } from './characters.js';
 
 // ------------------------------------------------------------------- city
@@ -159,3 +159,102 @@ export function coin(g, x, y, r, t) {
   g.restore();
 }
 export { heart };
+
+// ------------------------------------------------------------------- even set dressing
+// Every helper below spaces its items on an even grid across the FULL frame width, so the
+// dressing never clusters in the middle. Items are medium-sized and on-theme (an
+// electronics store / party): no tiny scattered clutter.
+import { drawTV as _tv, drawWasher as _wa, drawFridge as _fr, drawRice as _ri, drawAircon as _ac, drawMicrowave as _mw } from './products.js';
+const PRODUCTS = [(g) => _tv(g, 70), (g) => _wa(g, 44), (g) => _fr(g, 24), (g) => _ri(g, 52), (g) => _ac(g, 70), (g) => _mw(g, 56)];
+const evenXs = (n, margin = 0) => Array.from({ length: n }, (_, i) => margin + (i + 0.5) * (W - 2 * margin) / n);
+
+/** subtle diamond wallpaper over the whole wall */
+export function wallpaper(g, col, alpha, y1 = H, step = 44) {
+  g.save(); g.globalAlpha = alpha; g.fillStyle = col;
+  for (let y = 0, r = 0; y < y1; y += step / 2, r++) for (let x = (r % 2) * step / 2; x < W + step; x += step) {
+    g.beginPath(); g.moveTo(x, y - 6); g.lineTo(x + 6, y); g.lineTo(x, y + 6); g.lineTo(x - 6, y); g.closePath(); g.fill();
+  }
+  g.restore();
+}
+/** a string of bulbs across the top; lit = 0..1; they sway on the beat */
+export function hangingBulbs(g, t, music, n, y, lit = 1) {
+  const xs = evenXs(n);
+  g.strokeStyle = INK; g.lineWidth = 2; g.beginPath(); g.moveTo(0, y - 18);
+  xs.forEach((x) => g.quadraticCurveTo(x - W / n / 2, y - 8, x, y - 18)); g.lineTo(W, y - 18); g.stroke();
+  xs.forEach((x, i) => {
+    const sw = Math.sin(t * 2 + i) * 0.06 + springHit(music.since(t) - i * 0.02, 12, 6) * 0.12;
+    g.save(); g.translate(x, y - 18); g.rotate(sw);
+    g.strokeStyle = INK; g.lineWidth = 2; g.beginPath(); g.moveTo(0, 0); g.lineTo(0, 16); g.stroke();
+    rr(g, -5, 14, 10, 7, 2); g.fillStyle = '#555'; g.fill();
+    const on = lit * (0.75 + 0.25 * music.pulse(t));
+    if (on > 0.05) { g.shadowColor = '#ffe28a'; g.shadowBlur = 22 * on; }
+    g.beginPath(); g.ellipse(0, 30, 9, 11, 0, 0, Math.PI * 2);
+    g.fillStyle = on > 0.05 ? `rgba(255,${200 + 30 * on | 0},${100 + 60 * on | 0},1)` : '#5a5570'; g.fill();
+    g.shadowBlur = 0; g.lineWidth = 2; g.strokeStyle = INK; g.stroke();
+    g.restore();
+  });
+}
+/** framed product posters evenly along the wall */
+export function posterRow(g, t, music, n, y, h, labels = ['SALE', 'NEW', 'HOT', 'DEALS', '-50%', 'WOW']) {
+  const xs = evenXs(n), w = h * 0.78;
+  xs.forEach((x, i) => {
+    const tilt = Math.sin(i * 2.3) * 0.04 + springHit(music.since(t) - i * 0.02, 12, 7) * 0.03;
+    g.save(); g.translate(x, y); g.rotate(tilt);
+    rr(g, -w / 2, -h / 2, w, h, 6); fillStroke(g, '#fff', 4);
+    rr(g, -w / 2 + 6, -h / 2 + 6, w - 12, h - 12, 3); g.fillStyle = RAINBOW[(i * 3) % RAINBOW.length]; g.fill();
+    g.save(); g.translate(0, h * 0.12); PRODUCTS[i % PRODUCTS.length](g); g.restore();
+    popText(g, labels[i % labels.length], 0, -h * 0.3, h * 0.15, { fill: '#fff', outline: 4, shadow: false });
+    circle(g, 0, -h / 2 - 4, 3); g.fillStyle = INK; g.fill();
+    g.restore();
+  });
+}
+/** a full-width shelf with products, each hopping on the beat */
+export function shelfRow(g, t, music, y, n = 8, scale = 0.6) {
+  rr(g, 10, y, W - 20, 10, 3); fillStroke(g, '#c99b6a', 3);
+  for (let k = 0; k < 2; k++) { g.fillStyle = '#a77a4a'; g.fillRect(40 + k * (W - 100), y + 10, 12, 22); }
+  evenXs(n, 20).forEach((x, i) => {
+    const hop = Math.max(0, springHit(music.since(t) - i * 0.025, 16, 9)) * 6;
+    g.save(); g.translate(x, y - hop); g.scale(scale, scale); PRODUCTS[(i + 1) % PRODUCTS.length](g); g.restore();
+  });
+}
+/** pendant lamps evenly across the ceiling, swinging on the beat, casting light cones */
+export function pendantLamps(g, t, music, n, floorY, col = '#ff2a4d') {
+  evenXs(n).forEach((lx, i) => {
+    const a = Math.sin(music.count(t) * Math.PI + i * 0.5) * 0.1;
+    g.save(); g.translate(lx, 0); g.rotate(a);
+    g.strokeStyle = INK; g.lineWidth = 2; g.beginPath(); g.moveTo(0, 0); g.lineTo(0, 30); g.stroke();
+    g.beginPath(); g.moveTo(-20, 46); g.lineTo(20, 46); g.lineTo(10, 30); g.lineTo(-10, 30); g.closePath(); fillStroke(g, col, 2.5);
+    g.globalAlpha = 0.1 + 0.1 * music.pulse(t); g.fillStyle = '#fff6b0';
+    g.beginPath(); g.moveTo(-16, 46); g.lineTo(16, 46); g.lineTo(80, floorY); g.lineTo(-80, floorY); g.fill();
+    g.restore();
+  });
+}
+/** vertical neon bars evenly across a wall; each lights up in turn with the beat */
+export function neonBars(g, t, music, n, y0, y1) {
+  const xs = evenXs(n), bi = music.idx(t);
+  xs.forEach((x, i) => {
+    const on = (bi + i) % 3 === 0 ? 1 : 0.35;
+    const c = RAINBOW[(i * 2) % RAINBOW.length];
+    g.save(); g.shadowColor = c; g.shadowBlur = 20 * on; rr(g, x - 6, y0, 12, y1 - y0, 6); g.fillStyle = c; g.globalAlpha = 0.35 + 0.65 * on * (0.7 + 0.3 * music.pulse(t)); g.fill(); g.restore();
+  });
+}
+/** speaker stacks evenly along the floor, cones pumping on every kick */
+export function speakerRow(g, t, music, n, floorY, s = 1) {
+  evenXs(n).forEach((x) => {
+    const p = Math.max(music.pulse(t), music.kick(t));
+    rr(g, x - 30 * s, floorY - 96 * s, 60 * s, 96 * s, 6); fillStroke(g, '#15112a', 3, '#000');
+    for (const [cy, r] of [[-70, 11], [-32, 19]]) { circle(g, x, floorY + cy * s, r * s * (1 + p * 0.16)); fillStroke(g, '#2a2440', 3, '#555'); circle(g, x, floorY + cy * s, r * s * 0.35); g.fillStyle = '#555'; g.fill(); }
+  });
+}
+/** a row of crowd silhouettes along the bottom, bouncing on the beat */
+export function silhouettes(g, t, music, n, y, col = 'rgba(10,5,25,0.85)') {
+  evenXs(n).forEach((x, i) => {
+    const b = Math.abs(Math.sin((music.count(t) + (i % 2) * 0.5) * Math.PI)) * 10;
+    g.fillStyle = col;
+    circle(g, x, y - 58 - b, 15); g.fill();
+    rr(g, x - 20, y - 44 - b, 40, 60, 14); g.fill();
+    const up = (music.idx(t) + i) % 2;
+    g.strokeStyle = col; g.lineWidth = 9; g.lineCap = 'round';
+    g.beginPath(); g.moveTo(x - 16, y - 36 - b); g.lineTo(x - 26, y - (up ? 78 : 20) - b); g.moveTo(x + 16, y - 36 - b); g.lineTo(x + 26, y - (up ? 20 : 78) - b); g.stroke();
+  });
+}

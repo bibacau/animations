@@ -6,7 +6,7 @@
 import { W, H, INK, clamp, prog, lerp, easeOut, easeIn, easeInOut, easeOutBack, springHit, decay, popText, rr, circle, fillStroke, star, COL, RAINBOW, hash } from '../core.js';
 import { drawTV, screenGlow, drawWasher, drawFridge, drawRice, drawAircon, drawTag } from '../products.js';
 import { drawBuddy, pose, SKINS, blinkAt } from '../characters.js';
-import { bunting, sparkles, confetti } from '../world.js';
+import { bunting, sparkles, confetti, shelfRow, pendantLamps, wallpaper } from '../world.js';
 
 export default function make(ctx, t0, t1) {
   const m = ctx.music, wd = m.wordsIn(t0, t1);
@@ -21,27 +21,13 @@ export default function make(ctx, t0, t1) {
     // back wall
     g.fillStyle = '#fff4d6'; g.fillRect(0, 0, W, GY);
     for (let x = 0; x < W; x += 90) { g.fillStyle = '#ffe8a8'; g.fillRect(x, 0, 45, GY); }
+    wallpaper(g, '#ffffff', 0.4, GY);
     // big wall logo
-    popText(g, 'T-POT', W * 0.62, 74, 64, { fill: COL.tred, outline: 8, stroke: '#fff', shadowColor: 'rgba(0,0,0,0.15)' });
-    // shelves with stock that hops on every beat
-    for (const [sy, kind] of [[150, 0], [215, 1]]) {
-      rr(g, W * 0.3, sy, W * 0.68, 9, 3); fillStroke(g, '#c99b6a', 3);
-      for (let i = 0; i < 7; i++) {
-        const x = W * 0.34 + i * W * 0.1, hop = Math.max(0, springHit(m.since(t) - i * 0.02 - kind * 0.05, 16, 9)) * 6;
-        g.save(); g.translate(x, sy - hop); g.scale(0.32, 0.32);
-        [drawRice, (g, w) => drawWasher(g, w, t * 3), (g, w) => drawTV(g, w * 1.6), drawAircon][(i + kind) % 4](g, 110);
-        g.restore();
-      }
-    }
-    // ceiling lamps swing with the beat
-    for (const lx of [W * 0.25, W * 0.5, W * 0.75]) {
-      const a = Math.sin(m.count(t) * Math.PI) * 0.12;
-      g.save(); g.translate(lx, 0); g.rotate(a);
-      g.strokeStyle = INK; g.lineWidth = 2; g.beginPath(); g.moveTo(0, 0); g.lineTo(0, 34); g.stroke();
-      g.beginPath(); g.moveTo(-18, 48); g.lineTo(18, 48); g.lineTo(9, 32); g.lineTo(-9, 32); g.closePath(); fillStroke(g, COL.red, 2.5);
-      g.globalAlpha = 0.12 + 0.12 * m.pulse(t); g.fillStyle = '#fff6b0'; g.beginPath(); g.moveTo(-14, 48); g.lineTo(14, 48); g.lineTo(90, GY); g.lineTo(-90, GY); g.fill();
-      g.restore();
-    }
+    popText(g, 'T-POT', W * 0.5, 92, 56, { fill: COL.tred, outline: 8, stroke: '#fff', shadowColor: 'rgba(0,0,0,0.15)' });
+    // full-width shelves of stock that hops on every beat, lamps evenly across the ceiling
+    shelfRow(g, t, m, 165, 9, 0.62);
+    shelfRow(g, t, m, 245, 9, 0.62);
+    pendantLamps(g, t, m, 6, GY);
     bunting(g, -10, 10, W + 10, 10, 10, t, 18, m.pulse(t));
     // checker floor in perspective
     g.fillStyle = '#7b2cff'; g.fillRect(0, GY, W, H - GY);

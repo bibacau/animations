@@ -4,7 +4,7 @@
 // landing on the beat grid. At the end of the line Pip leaps off "LIGHT" and flies into the
 // glowing T-POT store while the camera zooms through its doors.
 import { W, H, INK, clamp, prog, lerp, easeOut, easeIn, easeInOut, easeOutBack, springHit, decay, popText, textWidth, rr, circle, fillStroke, COL, RAINBOW, hash } from '../core.js';
-import { drawBuddy, pose, SKINS, blinkAt } from '../characters.js';
+import { drawBuddy, pose, SKINS, blinkAt, shade } from '../characters.js';
 import { makeCity, drawCity, drawStore, skyGradient, stars, sparkles } from '../world.js';
 
 export default function make(ctx, t0, t1) {
@@ -12,7 +12,7 @@ export default function make(ctx, t0, t1) {
   const GY = H - 60;
   const g0 = ctx.canvas.getContext('2d');
   const heights = [GY - 120, GY - 170, GY - 135, GY - 195, GY - 150, GY - 205, GY - 165, GY - 185];
-  const cols = [COL.yellow, COL.cyan, '#fff', COL.lime, COL.orange, COL.yellow, COL.pink, '#fff176'];
+  const cols = [COL.yellow, COL.cyan, '#ffffff', COL.lime, COL.orange, COL.yellow, COL.pink, '#fff176'];
   let x = 330;
   const plats = wd.map((w, k) => {
     const size = w.display.length <= 2 ? 34 : 36;
@@ -111,11 +111,17 @@ export default function make(ctx, t0, t1) {
         const neon = /NEON|LIGHT/.test(q.w.text);
         const qx = q.x - cam, qy = q.y + dip + bob;
         g.save(); g.translate(qx, qy); g.scale(s, s);
-        rr(g, -q.width / 2, 6, q.width, 14, 6); g.fillStyle = 'rgba(0,0,0,0.35)'; g.fill();
-        rr(g, -q.width / 2, -26, q.width, 44, 10); fillStroke(g, neon ? '#2a0a3e' : '#ffffff', 4);
-        if (neon) { g.shadowColor = q.w.text === 'NEON' ? '#ff4fd8' : '#ffe14d'; g.shadowBlur = 18 + 14 * m.pulse(t); }
+        // solid extruded letters (no plate): soft shadow, a darker 3D side, then the face
+        g.beginPath(); g.ellipse(0, 26, q.width * 0.42, 6, 0, 0, Math.PI * 2); g.fillStyle = 'rgba(0,0,0,0.28)'; g.fill();
         const on = !neon || hash(Math.floor(t * 14) + q.k) > 0.05;
-        popText(g, q.w.display, 0, -4, q.size, { fill: neon ? (on ? (q.w.text === 'NEON' ? '#ff7be6' : '#fff07a') : '#b0609a') : q.col, outline: neon ? 0 : 6, shadow: !neon });
+        const face = neon ? (on ? (q.w.text === 'NEON' ? '#ff7be6' : '#fff07a') : '#b0609a') : q.col;
+        const side = neon ? (q.w.text === 'NEON' ? '#8a1a6e' : '#a07a10') : shade(q.col, -0.45);
+        g.font = `${q.size}px Bowlby, Impact, sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.lineJoin = 'round';
+        for (let d = 7; d >= 1; d--) { g.fillStyle = side; g.fillText(q.w.display, 0, -4 + d); g.lineWidth = 4; g.strokeStyle = INK; if (d === 7) g.strokeText(q.w.display, 0, -4 + d); }
+        if (neon) { g.shadowColor = q.w.text === 'NEON' ? '#ff4fd8' : '#ffe14d'; g.shadowBlur = 18 + 14 * m.pulse(t); }
+        g.fillStyle = face; g.fillText(q.w.display, 0, -4);
+        g.shadowBlur = 0; g.lineWidth = 3; g.strokeStyle = INK; g.strokeText(q.w.display, 0, -4);
+        g.fillStyle = 'rgba(255,255,255,0.35)'; g.save(); g.beginPath(); g.rect(-q.width / 2, -4 - q.size * 0.45, q.width, q.size * 0.22); g.clip(); g.fillText(q.w.display, 0, -4); g.restore();
         g.restore();
         ctx.mark(q.w.i);
       }

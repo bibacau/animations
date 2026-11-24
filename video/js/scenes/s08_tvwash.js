@@ -4,10 +4,10 @@
 // screen, which is showing a washing machine; that becomes the whole frame. On "GOING"
 // we zoom into the drum, and on "NON-STOP" we're inside it: everything spins crazily,
 // faster and faster (with spin blur), socks + T-POT letters + bubbles, into a white-out.
-import { W, H, INK, clamp, prog, lerp, easeOut, easeIn, easeInOut, easeOutBack, springHit, decay, popText, rr, circle, fillStroke, star, COL, RAINBOW, hash } from '../core.js';
+import { W, H, INK, clamp, prog, lerp, easeOut, easeIn, easeInOut, smooth as smoothF, easeOutBack, springHit, decay, popText, rr, circle, fillStroke, star, COL, RAINBOW, hash } from '../core.js';
 import { drawWasher } from '../products.js';
 import { drawBuddy, drawTVBuddy, pose, SKINS, blinkAt } from '../characters.js';
-import { sparkles, confetti } from '../world.js';
+import { sparkles, confetti, neonBars, speakerRow, silhouettes } from '../world.js';
 
 export default function make(ctx, t0, t1) {
   const m = ctx.music, wd = m.wordsIn(t0, t1);
@@ -33,7 +33,7 @@ export default function make(ctx, t0, t1) {
       g.save(); g.translate(wx + sx * (k * 250), wy - Math.abs(springHit(m.since(t) - k * 0.03, 16, 8)) * 6); drawWasher(g, 170, t * 8 * sx); g.restore();
     }
     g.fillStyle = '#7b2cff'; g.fillRect(-W, wy, W * 3, H);
-    g.save(); g.translate(wx, wy); drawWasher(g, ww, t * 10, (g, R) => {
+    g.save(); g.translate(wx, wy); drawWasher(g, ww, drumAngle(t), (g, R) => {
       for (let i = 0; i < 5; i++) { g.rotate(Math.PI * 2 / 5); rr(g, -R * 0.25, R * 0.25, R * 0.5, R * 0.3, 6); g.fillStyle = RAINBOW[i]; g.fill(); }
     }); g.restore();
     popText(g, 'T-POT', wx, wy - ww * 1.1 - 26, 36, { fill: COL.tred, outline: 6 });
@@ -41,9 +41,14 @@ export default function make(ctx, t0, t1) {
     return { drumY, drumR: ww * 0.33 };
   }
 
+  // drum rotation shared by the laundromat close-up and the inside view, so the hand-off is
+  // seamless: a steady 3 rad/s that ramps up smoothly (cubic) once NON-STOP starts
+  const SPIN0 = spinT - 0.12;
+  function drumAngle(t) { const s = Math.max(0, t - SPIN0); return 3 * t + 4.5 * s * s * s; }
+  function drumOmega(t) { const s = Math.max(0, t - SPIN0); return 3 + 13.5 * s * s; }
   function drumInside(g, t) {
     // the drum interior, spinning: angle accelerates continuously
-    const s = Math.max(0, t - spinT), ang = 3 * s + 9 * s * s + 6 * s * s * s;
+    const ang = drumAngle(t);
     g.save(); g.translate(W / 2, H / 2); g.rotate(ang);
     g.fillStyle = '#26305a'; g.fillRect(-W, -W, W * 2, W * 2);
     for (let r = 60; r < 700; r += 46) { circle(g, 0, 0, r); g.strokeStyle = r % 92 ? '#3a4880' : '#4a5a9a'; g.lineWidth = 8; g.stroke(); }
@@ -67,27 +72,27 @@ export default function make(ctx, t0, t1) {
   return {
     name: 'tvwash', caption: { pos: 'bottom' }, shake: (t) => (t >= spinT ? 0.4 : 0.9),
     draw(g, t) {
-      if (t >= spinT) {
-        // spin with motion blur: render once, then smear rotated copies
-        tg.setTransform(1, 0, 0, 1, 0, 0);
-        const ang = drumInside(tg, t);
-        const s = t - spinT, omega = 3 + 18 * s + 18 * s * s;
-        g.drawImage(tmp, 0, 0);
-        const smear = Math.min(0.5, omega / 140);
-        for (let k = 1; k <= 4; k++) { g.save(); g.globalAlpha = 0.28; g.translate(W / 2, H / 2); g.rotate(-smear * k / 4); g.translate(-W / 2, -H / 2); g.drawImage(tmp, 0, 0); g.restore(); }
-        if (s < 0.12) { g.fillStyle = `rgba(255,255,255,${1 - s / 0.12})`; g.fillRect(0, 0, W, H); }
-        const wo = prog(t, t1 - 0.3, t1); if (wo > 0) { g.fillStyle = `rgba(255,255,255,${wo})`; g.fillRect(0, 0, W, H); }
-        return;
-      }
-      if (t >= zTv + 0.36) {   // we are "in" the TV picture: the laundromat, then into the drum
-        const dz = easeIn(prog(t, zDrum, spinT)) * 7;
-        laundromat(g, t, 1 + dz);
+      const zEnd = zTv + 0.45;                         // TV-screen zoom finishes on GOING
+      if (t >= zEnd) {
+        // inside the TV picture: ease into the drum, cross-fade to the drum interior, spin
+        const dz = easeInOut(prog(t, zDrum, spinT + 0.15));
+        laundromat(g, t, 1 + dz * 5.2);
+        const fade = smoothF(prog(t, spinT - 0.12, spinT + 0.18));
+        if (fade > 0) {
+          tg.setTransform(1, 0, 0, 1, 0, 0);
+          drumInside(tg, t);
+          const smear = Math.min(0.55, drumOmega(t) / 30 * 0.9);   // ~ one frame of rotation
+          g.save(); g.globalAlpha = fade; g.drawImage(tmp, 0, 0); g.restore();
+          if (smear > 0.06) for (let k = 1; k <= 5; k++) { g.save(); g.globalAlpha = fade * 0.22; g.translate(W / 2, H / 2); g.rotate(-smear * k / 5); g.translate(-W / 2, -H / 2); g.drawImage(tmp, 0, 0); g.restore(); }
+        }
+        const wo = easeIn(prog(t, t1 - 0.35, t1)); if (wo > 0) { g.fillStyle = `rgba(255,255,255,${wo})`; g.fillRect(0, 0, W, H); }
         return;
       }
       // ---- stage: disco Pip -> TV-Pip
       const flashing = t >= wFlash.start;
       g.fillStyle = flashing ? RAINBOW[Math.floor((t - wFlash.start) / (m.P / 4)) % 8] : '#1b1035'; g.fillRect(0, 0, W, H);
       if (flashing) { g.fillStyle = 'rgba(0,0,0,0.55)'; g.fillRect(0, 0, W, H); }
+      neonBars(g, t, m, 10, 110, GY - 14);
       // disco ball + light spots
       const ba = t * 1.5;
       g.strokeStyle = INK; g.lineWidth = 2; g.beginPath(); g.moveTo(W / 2, 0); g.lineTo(W / 2, 40); g.stroke();
@@ -95,9 +100,10 @@ export default function make(ctx, t0, t1) {
       for (let i = 0; i < 6; i++) for (let j = 0; j < 4; j++) { g.fillStyle = (i + j + Math.floor(ba * 4)) % 3 ? '#e8e8f8' : '#8888a8'; g.fillRect(W / 2 - 24 + i * 8, 48 + j * 11, 6, 9); }
       for (let i = 0; i < 26; i++) { const a = ba + i * 2.39, r = 120 + (i * 37) % 300; circle(g, W / 2 + Math.cos(a) * r * 1.4, 70 + Math.abs(Math.sin(a)) * r, 5); g.fillStyle = RAINBOW[i % 8] + 'aa'; g.fill(); }
       g.fillStyle = '#2a1650'; g.fillRect(0, GY, W, H - GY);
+      speakerRow(g, t, m, 4, GY, 0.95);
       for (let i = 0; i < 10; i++) { g.fillStyle = (i + m.idx(t)) % 2 ? '#ff4fd8' : '#16e0ff'; g.globalAlpha = 0.5 + 0.5 * m.pulse(t); g.fillRect(i * W / 10, GY, W / 10 - 4, 8); g.globalAlpha = 1; }
       // zoom into the TV screen on WASHERS
-      const zu = easeIn(prog(t, zTv, zTv + 0.36));
+      const zu = easeInOut(prog(t, zTv, zTv + 0.45));
       const Z = 1 + zu * (W / screen.w - 1);
       g.save();
       const cx = lerp(W / 2, screen.x, zu), cy = lerp(H / 2, screen.y, zu);
@@ -111,7 +117,7 @@ export default function make(ctx, t0, t1) {
           headTilt: Math.sin(m.count(t) * Math.PI) * 0.08,
           screen: (g, x, y, w, h) => {
             if (t >= zTv) {   // the picture: our washer room (continuous with the full-frame cut)
-              g.save(); g.translate(x, y); g.scale(w / W, h / H); laundromat(g, t, 1); g.restore();
+              g.save(); g.translate(x, y + (h - H * w / W) / 2); g.scale(w / W, w / W); laundromat(g, t, 1); g.restore();   // uniform scale: matches the full-frame cut exactly
             } else if (flashing) {
               const k = Math.floor((t - wFlash.start) / (m.P / 4));
               g.fillStyle = RAINBOW[(k * 3) % 8]; g.fillRect(x, y, w, h);
@@ -128,6 +134,8 @@ export default function make(ctx, t0, t1) {
         if (flashing && t < zTv) { g.save(); g.globalAlpha = 0.35 * m.pulse8(t); g.fillStyle = '#fff'; g.beginPath(); g.ellipse(body.x, GY + 10, 200, 26, 0, 0, Math.PI * 2); g.fill(); g.restore(); }
       }
       g.restore();
+      // the dancing crowd in front of the stage (fades as we zoom into the screen)
+      if (t < zTv + 0.2) { g.save(); g.globalAlpha = 1 - prog(t, zTv, zTv + 0.2); silhouettes(g, t, m, 9, H + 18); g.restore(); }
       // POOF cloud for the transformation
       if (t >= poofT && t < poofT + 0.45) {
         const u = prog(t, poofT, poofT + 0.45);

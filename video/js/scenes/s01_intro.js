@@ -4,7 +4,7 @@
 // cord drops from the ceiling, a hand grabs it on "IT" and yanks it on "ON": CLICK. The
 // lights come on, all three turn GREEN, then switch to random colours on every 8th note.
 import { W, H, INK, clamp, prog, easeOut, easeOutBack, easeOutElastic, springHit, decay, popText, circle, fillStroke, hash, rr, RAINBOW, COL } from '../core.js';
-import { sparkles, halftone } from '../world.js';
+import { sparkles, halftone, hangingBulbs, wallpaper } from '../world.js';
 
 export default function make(ctx, t0, t1) {
   const m = ctx.music, Wd = m.words;
@@ -30,6 +30,8 @@ export default function make(ctx, t0, t1) {
         g.restore();
         halftone(g, '#ffffff', 0.05);
       }
+      if (lit) wallpaper(g, '#ffffff', 0.06, H * 0.8);
+      hangingBulbs(g, t, m, 9, 28, lit ? 1 : 0);
       // floor + speakers that thump on every beat (even in the dark)
       g.fillStyle = lit ? '#24124d' : '#0b0718'; g.fillRect(0, H * 0.8, W, H * 0.2);
       for (const sx of [70, W - 70]) {

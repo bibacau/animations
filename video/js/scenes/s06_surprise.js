@@ -6,7 +6,7 @@
 import { W, H, INK, clamp, prog, lerp, easeOut, easeIn, easeOutBack, easeOutBounce, springHit, decay, popText, rr, circle, fillStroke, star, COL, RAINBOW, hash } from '../core.js';
 import { drawTag } from '../products.js';
 import { drawBuddy, pose, SKINS, blinkAt } from '../characters.js';
-import { sunburst, confetti, floatingHearts, sparkles, bunting, balloon } from '../world.js';
+import { sunburst, confetti, floatingHearts, sparkles, bunting, balloon, wallpaper, shelfRow, pendantLamps } from '../world.js';
 
 export default function make(ctx, t0, t1) {
   const m = ctx.music, wd = m.wordsIn(t0, t1);
@@ -25,7 +25,10 @@ export default function make(ctx, t0, t1) {
       else {
         g.fillStyle = '#d8fff6'; g.fillRect(0, 0, W, H);
         for (let x = 0; x < W; x += 70) { g.fillStyle = '#c2f5ea'; g.fillRect(x, 0, 35, H); }
+        wallpaper(g, '#ffffff', 0.5, GY);
+        pendantLamps(g, t, m, 6, GY, '#7b2cff');
       }
+      shelfRow(g, t, m, 292, 9, 0.6);
       bunting(g, -10, 14, W + 10, 14, 12, t, 18, m.pulse(t));
       // the DEALS board drops behind Mimi; each word lights up when sung
       const bu = easeOutBounce(prog(t, boardIn, boardIn + 0.5));

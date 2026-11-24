@@ -1,8 +1,8 @@
 // 10. "YOU WANT THE BEST DEAL, HEAD TO T-POT"
 // Driving down a very long road with buildings on both sides (pseudo-3D, 2D-drawn). We
 // accelerate harder and harder - speed lines, zoom blur until the screen smears - then on
-// "TO" a dead STOP (screech, jolt). On "T-POT" the T-POT store rises up right in front of
-// us: we've arrived. Lamp posts flick past on the beat.
+// "TO" a dead STOP (screech, jolt) right in front of the T-POT store, which has been
+// standing at the end of the road all along. On "T-POT" its doors blaze: we've arrived. Lamp posts flick past on the beat.
 import { W, H, INK, clamp, prog, lerp, easeOut, easeIn, easeOutBack, springHit, decay, popText, rr, circle, fillStroke, COL, RAINBOW, hash } from '../core.js';
 import { drawStore, speedLines, sparkles, confetti } from '../world.js';
 
@@ -17,6 +17,8 @@ export default function make(ctx, t0, t1) {
   const dist = (t) => { const tt = Math.min(t, stopT) - t0; return v0 * (Math.exp(k * tt) - 1) / k; };
   const speed = (t) => (t < stopT ? v0 * Math.exp(k * (t - t0)) : 0);
   const vMax = speed(stopT - 1e-3);
+  // the T-POT store stands at the end of the road the whole time; we stop right in front of it
+  const zStore = dist(stopT) + 420, STW = 520, STH = 300;
   const buildings = [];
   for (let i = 0; i < 400; i++) buildings.push({ z: i * 90 + hash(i) * 30, side: i % 2 ? 1 : -1, w: 90 + hash(i * 3) * 90, h: 120 + hash(i * 7) * 260, col: ['#4a2585', '#5e2a8f', '#3d1f73', '#7b2c9f', '#2a5bff'][i % 5], seed: i, sign: hash(i * 11) > 0.6 });
 
@@ -32,7 +34,9 @@ export default function make(ctx, t0, t1) {
     g.fillStyle = '#1e7a3e'; g.fillRect(0, HZ, W, H - HZ);
     // road strips, far -> near
     const first = Math.floor(z / SEG);
-    for (let n = first + 120; n >= first; n--) {
+    const last = Math.floor(zStore / SEG);
+    // plaza in front of the store
+    for (let n = Math.min(first + 120, last); n >= first; n--) {
       const d0 = n * SEG - z, d1 = (n + 1) * SEG - z;
       if (d1 <= 1) continue;
       const e0 = Math.max(d0, 1);
@@ -45,7 +49,18 @@ export default function make(ctx, t0, t1) {
       if (n % 2) { g.fillStyle = '#ffd400'; g.beginPath(); g.moveTo(W / 2 - w1 * 0.03, y1); g.lineTo(W / 2 + w1 * 0.03, y1); g.lineTo(W / 2 + w0 * 0.03, y0); g.lineTo(W / 2 - w0 * 0.03, y0); g.fill(); }
     }
     // buildings both sides, far -> near
-    const vis = buildings.filter((b) => b.z - z > 8 && b.z - z < 3000).sort((a, b) => b.z - a.z);
+    // the store (drawn first: it is the farthest thing on the road)
+    const ds = zStore - z, ss = F / ds;
+    const sw = STW * ss, sh = STH * ss, sy = HZ + CAMH * ss;
+    if (sw > 3) {
+      g.fillStyle = '#c7b9e8'; g.beginPath(); g.moveTo(W / 2 - sw * 0.75, sy); g.lineTo(W / 2 + sw * 0.75, sy); g.lineTo(W / 2 + 260 * F / Math.max(ds - 80, 1), HZ + CAMH * F / Math.max(ds - 80, 1)); g.lineTo(W / 2 - 260 * F / Math.max(ds - 80, 1), HZ + CAMH * F / Math.max(ds - 80, 1)); g.fill();
+      const dd = drawStore(g, W / 2 - sw / 2, sy, sw, sh, t, { flicker: false });
+      if (t >= arriveT) {   // doors blaze and the sign pulses on the beat when we arrive
+        g.save(); g.globalAlpha = 0.5 * (0.5 + 0.5 * m.pulse(t)); g.fillStyle = '#fff6c0';
+        g.beginPath(); g.ellipse(dd.doorX, sy - 4, dd.doorW * 1.3, dd.doorH * 0.35, 0, 0, Math.PI * 2); g.fill(); g.restore();
+      }
+    }
+    const vis = buildings.filter((b) => b.z - z > 8 && b.z - z < 3000 && b.z < zStore - 80).sort((a, b) => b.z - a.z);
     for (const b of vis) {
       const d = b.z - z, sc = F / d;
       const x = W / 2 + b.side * (380 + b.w / 2) * sc, yb = HZ + CAMH * sc, bw = b.w * sc, bh = b.h * sc;
@@ -67,15 +82,9 @@ export default function make(ctx, t0, t1) {
       // stop jolt: the camera lurches forward then settles
       const jolt = t >= stopT ? springHit(t - stopT, 18, 6) * 30 : 0;
       tg.save(); tg.translate(0, jolt); road(tg, t); tg.restore();
-      // the store rises in front of us on T-POT
-      if (t >= stopT) {
-        const u = easeOutBack(prog(t, arriveT - 0.05, arriveT + 0.35), 1.4);
-        const s = lerp(0.25, 1.15, u), sw = 260 * s, sh = 260 * s;
-        tg.save(); tg.globalAlpha = clamp(prog(t, stopT, stopT + 0.15)); const by = HZ + 120 + (1 - u) * 40;
-        drawStore(tg, W / 2 - sw / 2, by, sw, sh, t);
-        tg.restore();
-        sparkles(tg, t, 10, 61, { x: W / 2 - 200, y: 40, w: 400, h: 260 }, '#ffd400');
-        if (t >= arriveT) confetti(tg, t, arriveT, { n: 70, from: { x: W / 2, y: 140 }, spread: 3, life: 1.1 });
+      if (t >= arriveT) {
+        sparkles(tg, t, 10, 61, { x: W / 2 - 220, y: 30, w: 440, h: 230 }, '#ffd400');
+        confetti(tg, t, arriveT, { n: 70, from: { x: W / 2, y: 120 }, spread: 3, life: 1.1 });
       }
       g.drawImage(tmp, 0, 0);
       // zoom blur that grows with speed (screen smears), gone instantly at the stop

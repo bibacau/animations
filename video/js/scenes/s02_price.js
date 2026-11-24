@@ -5,7 +5,7 @@
 import { W, H, INK, clamp, prog, easeOut, easeIn, easeOutBack, easeOutBounce, springHit, decay, popText, rr, circle, fillStroke, star, COL, RAINBOW, hash } from '../core.js';
 import { drawTV, screenGlow, drawRice, drawMicrowave, drawTag } from '../products.js';
 import { drawBuddy, pose, SKINS, blinkAt } from '../characters.js';
-import { bunting, confetti, coin, sparkles } from '../world.js';
+import { bunting, confetti, coin, sparkles, wallpaper, posterRow } from '../world.js';
 
 export default function make(ctx, t0, t1) {
   const m = ctx.music, wd = m.wordsIn(t0, t1);
@@ -35,8 +35,10 @@ export default function make(ctx, t0, t1) {
       // shop wall with stripes + sale banners
       g.fillStyle = '#ffe9f6'; g.fillRect(0, 0, W, H);
       for (let x = 0; x < W; x += 60) { g.fillStyle = '#ffd5ec'; g.fillRect(x, 0, 30, GY); }
+      wallpaper(g, '#ffffff', 0.45, GY);
       bunting(g, -10, 18, W + 10, 18, 14, t, 16, m.pulse(t));
       shelf(g, t, 120);
+      posterRow(g, t, m, 6, 238, 96);
       // floor
       g.fillStyle = '#7b2cff'; g.fillRect(0, GY, W, H - GY);
       for (let x = -40; x < W + 40; x += 48) { g.fillStyle = '#6a20e6'; g.beginPath(); g.moveTo(x, GY); g.lineTo(x + 24, GY); g.lineTo(x + 24 - 60, H); g.lineTo(x - 60, H); g.fill(); }
