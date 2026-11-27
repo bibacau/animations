@@ -40,8 +40,8 @@ export default function make(ctx, t0, t1) {
       shelf(g, t, 120);
       posterRow(g, t, m, 6, 238, 96);
       // floor
-      g.fillStyle = '#7b2cff'; g.fillRect(0, GY, W, H - GY);
-      for (let x = -40; x < W + 40; x += 48) { g.fillStyle = '#6a20e6'; g.beginPath(); g.moveTo(x, GY); g.lineTo(x + 24, GY); g.lineTo(x + 24 - 60, H); g.lineTo(x - 60, H); g.fill(); }
+      g.fillStyle = '#d9a86c'; g.fillRect(0, GY, W, H - GY);
+      for (let x = -40; x < W + 40; x += 48) { g.fillStyle = '#c8955a'; g.beginPath(); g.moveTo(x, GY); g.lineTo(x + 24, GY); g.lineTo(x + 24 - 60, H); g.lineTo(x - 60, H); g.fill(); }
       // spotlight
       g.save(); g.globalAlpha = 0.18 + 0.08 * m.pulse(t); g.fillStyle = '#fff6b0';
       g.beginPath(); g.moveTo(tvX - 30, 0); g.lineTo(tvX + 30, 0); g.lineTo(tvX + 230, GY); g.lineTo(tvX - 230, GY); g.fill(); g.restore();

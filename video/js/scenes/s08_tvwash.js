@@ -32,7 +32,7 @@ export default function make(ctx, t0, t1) {
     for (const sx of [-1, 1]) for (let k = 1; k <= 2; k++) {
       g.save(); g.translate(wx + sx * (k * 250), wy - Math.abs(springHit(m.since(t) - k * 0.03, 16, 8)) * 6); drawWasher(g, 170, t * 8 * sx); g.restore();
     }
-    g.fillStyle = '#7b2cff'; g.fillRect(-W, wy, W * 3, H);
+    g.fillStyle = '#9fb4cc'; g.fillRect(-W, wy, W * 3, H);
     g.save(); g.translate(wx, wy); drawWasher(g, ww, drumAngle(t), (g, R) => {
       for (let i = 0; i < 5; i++) { g.rotate(Math.PI * 2 / 5); rr(g, -R * 0.25, R * 0.25, R * 0.5, R * 0.3, 6); g.fillStyle = RAINBOW[i]; g.fill(); }
     }); g.restore();
@@ -90,7 +90,7 @@ export default function make(ctx, t0, t1) {
       }
       // ---- stage: disco Pip -> TV-Pip
       const flashing = t >= wFlash.start;
-      g.fillStyle = flashing ? RAINBOW[Math.floor((t - wFlash.start) / (m.P / 4)) % 8] : '#1b1035'; g.fillRect(0, 0, W, H);
+      g.fillStyle = flashing ? RAINBOW[Math.floor((t - wFlash.start) / (m.P / 4)) % 8] : '#0d1a3a'; g.fillRect(0, 0, W, H);
       if (flashing) { g.fillStyle = 'rgba(0,0,0,0.55)'; g.fillRect(0, 0, W, H); }
       neonBars(g, t, m, 10, 110, GY - 14);
       // disco ball + light spots
@@ -99,7 +99,7 @@ export default function make(ctx, t0, t1) {
       circle(g, W / 2, 70, 30); fillStroke(g, '#c8c8d8', 3);
       for (let i = 0; i < 6; i++) for (let j = 0; j < 4; j++) { g.fillStyle = (i + j + Math.floor(ba * 4)) % 3 ? '#e8e8f8' : '#8888a8'; g.fillRect(W / 2 - 24 + i * 8, 48 + j * 11, 6, 9); }
       for (let i = 0; i < 26; i++) { const a = ba + i * 2.39, r = 120 + (i * 37) % 300; circle(g, W / 2 + Math.cos(a) * r * 1.4, 70 + Math.abs(Math.sin(a)) * r, 5); g.fillStyle = RAINBOW[i % 8] + 'aa'; g.fill(); }
-      g.fillStyle = '#2a1650'; g.fillRect(0, GY, W, H - GY);
+      g.fillStyle = '#16244a'; g.fillRect(0, GY, W, H - GY);
       speakerRow(g, t, m, 4, GY, 0.95);
       for (let i = 0; i < 10; i++) { g.fillStyle = (i + m.idx(t)) % 2 ? '#ff4fd8' : '#16e0ff'; g.globalAlpha = 0.5 + 0.5 * m.pulse(t); g.fillRect(i * W / 10, GY, W / 10 - 4, 8); g.globalAlpha = 1; }
       // zoom into the TV screen on WASHERS

@@ -4,7 +4,7 @@
 // beat. On "SURPRISE" she jumps back, eyes wide, "!" pops. On the drop her hands shoot
 // up - pure joy - confetti cannons, sunburst, hearts, bouncing on every beat.
 import { W, H, INK, clamp, prog, lerp, easeOut, easeIn, easeOutBack, easeOutBounce, springHit, decay, popText, rr, circle, fillStroke, star, COL, RAINBOW, hash } from '../core.js';
-import { drawTag } from '../products.js';
+import { drawTag, drawFridge, drawWasher, drawFan, drawTallSpeaker } from '../products.js';
 import { drawBuddy, pose, SKINS, blinkAt } from '../characters.js';
 import { sunburst, confetti, floatingHearts, sparkles, bunting, balloon, wallpaper, shelfRow, pendantLamps } from '../world.js';
 
@@ -65,7 +65,13 @@ export default function make(ctx, t0, t1) {
         sparkles(g, t, 12, 17, { x: 0, y: 0, w: W, h: H * 0.8 });
       }
       // floor
-      g.fillStyle = party ? 'rgba(27,16,53,0.85)' : '#ff6fb5'; g.fillRect(0, GY, W, H - GY);
+      g.fillStyle = '#d9a86c'; g.fillRect(0, GY, W, H - GY);
+      for (let x = 0; x < W; x += 64) { g.fillStyle = '#c8955a'; g.fillRect(x, GY, 3, H - GY); }
+      // matching appliances on both sides of the floor, hopping on the beat
+      [[W * 0.1, (g) => drawFridge(g, 54)], [W * 0.24, (g) => drawWasher(g, 76, t * 4)], [W * 0.76, (g) => drawFan(g, 54, t * 12)], [W * 0.9, (g) => drawTallSpeaker(g, 44, m.pulse(t))]].forEach(([x, d], i) => {
+        const hop = Math.max(0, springHit(m.since(t) - i * 0.03, 16, 9)) * 5;
+        g.save(); g.translate(x, GY - hop); d(g); g.restore();
+      });
       // Mimi
       let ps, face = 'happy', look = { x: 0, y: 0 }, x = mimi.x, y = mimi.y, lean = 0;
       if (party) {

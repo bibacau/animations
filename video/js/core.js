@@ -1,6 +1,8 @@
 // Core helpers: easing, deterministic noise, the beat clock, and 2D drawing primitives.
 // Every frame is a pure function of time t, so frames can be rendered in any order.
 
+import { BRAND, drawLogoWord, logoWordWidth } from './logo.js';
+
 export const W = 854, H = 480;
 export const INK = '#1b1433';
 
@@ -45,6 +47,7 @@ export class Music {
   kick(t, k = 10) { let v = 0; for (let i = this.kicks.length - 1; i >= 0; i--) { const dt = t - this.kicks[i].t; if (dt < 0) continue; if (dt > 1) break; v = Math.max(v, decay(dt, k)); } return v; }
   /** first beat time >= t (optionally on the 8th grid) */
   after(t, half = false) { let i = Math.max(0, this.idx(t)); for (; ; i++) { const b = this.bt(i); if (half && b - this.P / 2 >= t - 1e-4) return b - this.P / 2; if (b >= t - 1e-4) return b; } }
+  beatsBetween(a, b) { return this.beats.filter((x) => x.t >= a && x.t < b); }
   wordsIn(a, b) { return this.words.filter((w) => w.start >= a - 0.01 && w.start < b); }
 }
 
@@ -57,8 +60,13 @@ export function star(g, x, y, r1, r2, n = 5, rot = -Math.PI / 2) {
   for (let i = 0; i < n * 2; i++) { const r = i % 2 ? r2 : r1; const a = rot + i * Math.PI / n; i ? g.lineTo(x + Math.cos(a) * r, y + Math.sin(a) * r) : g.moveTo(x + Math.cos(a) * r, y + Math.sin(a) * r); }
   g.closePath();
 }
-/** chunky cartoon text: fill + thick outline + drop shadow. align center/middle. */
+/** chunky cartoon text: fill + thick outline + drop shadow. align center/middle.
+ *  Any "T-POT" inside the text is drawn with the real logo letterforms. */
 export function popText(g, text, x, y, size, o = {}) {
+  if (BRAND.logo && text.includes('T-POT') && o.brand !== false) return brandText(g, text, x, y, size, o);
+  plainText(g, text, x, y, size, o);
+}
+function plainText(g, text, x, y, size, o = {}) {
   g.save();
   g.font = `${size}px ${o.font || 'Bowlby'}, Impact, sans-serif`;
   g.textAlign = o.align || 'center'; g.textBaseline = 'middle';
@@ -68,7 +76,26 @@ export function popText(g, text, x, y, size, o = {}) {
   g.fillStyle = o.fill || '#fff'; g.fillText(text, x, y);
   g.restore();
 }
-export function textWidth(g, text, size, font = 'Bowlby') { g.save(); g.font = `${size}px ${font}, Impact, sans-serif`; const w = g.measureText(text).width; g.restore(); return w; }
+const capOf = (size, font) => size * (font === 'Anton' ? 0.78 : 0.7);
+function brandText(g, text, x, y, size, o) {
+  const parts = text.split('T-POT');
+  const segs = [];
+  parts.forEach((p, i) => { if (p) segs.push({ t: p }); if (i < parts.length - 1) segs.push({ logo: true }); });
+  const cap = capOf(size, o.font);
+  const w = segs.map((s) => (s.logo ? logoWordWidth(cap) : plainWidth(g, s.t, size, o.font)));
+  const total = w.reduce((a, b) => a + b, 0);
+  let cx = o.align === 'left' ? x : o.align === 'right' ? x - total : x - total / 2;
+  segs.forEach((s, i) => {
+    if (s.logo) drawLogoWord(g, cx + w[i] / 2, y, cap, { outline: o.logoOutline ?? Math.max(1.5, size * 0.07), outlineCol: o.logoOutlineCol || '#fff', fill: o.logoFill, glow: o.logoGlow });
+    else plainText(g, s.t, cx, y, size, { ...o, align: 'left' });
+    cx += w[i];
+  });
+}
+function plainWidth(g, text, size, font = 'Bowlby') { g.save(); g.font = `${size}px ${font}, Impact, sans-serif`; const w = g.measureText(text).width; g.restore(); return w; }
+export function textWidth(g, text, size, font = 'Bowlby') {
+  if (BRAND.logo && text.includes('T-POT')) { const p = text.split('T-POT'); return p.reduce((a, s) => a + (s ? plainWidth(g, s, size, font) : 0), 0) + (p.length - 1) * logoWordWidth(capOf(size, font)); }
+  return plainWidth(g, text, size, font);
+}
 
 /** run fn with the canvas translated/rotated/scaled about (x, y) */
 export function at(g, x, y, s, rot, fn) { g.save(); g.translate(x, y); if (rot) g.rotate(rot); if (s !== 1) g.scale(s, s); fn(); g.restore(); }

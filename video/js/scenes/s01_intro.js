@@ -3,8 +3,10 @@
 // slides LEFT, a third grey T-POT pops in the MIDDLE on that same beat. On "TURN" a pull
 // cord drops from the ceiling, a hand grabs it on "IT" and yanks it on "ON": CLICK. The
 // lights come on, all three turn GREEN, then switch to random colours on every 8th note.
-import { W, H, INK, clamp, prog, easeOut, easeOutBack, easeOutElastic, springHit, decay, popText, circle, fillStroke, hash, rr, RAINBOW, COL } from '../core.js';
-import { sparkles, halftone, hangingBulbs, wallpaper } from '../world.js';
+import { W, H, INK, clamp, prog, easeOut, easeIn, easeOutBack, easeOutElastic, springHit, decay, popText, circle, fillStroke, hash, rr, RAINBOW, COL } from '../core.js';
+import { sparkles, halftone, hangingBulbs, wallpaper, shelfRow } from '../world.js';
+import { drawHand, drawArm } from '../characters.js';
+import { drawLogoWord, logoWordWidth } from '../logo.js';
 
 export default function make(ctx, t0, t1) {
   const m = ctx.music, Wd = m.words;
@@ -22,7 +24,7 @@ export default function make(ctx, t0, t1) {
       const lit = t >= click;
       // room
       const gr = g.createRadialGradient(W / 2, H * 0.45, 40, W / 2, H * 0.5, W * 0.7);
-      if (lit) { gr.addColorStop(0, '#3a1d7a'); gr.addColorStop(1, '#120a2e'); } else { gr.addColorStop(0, '#1b1433'); gr.addColorStop(1, '#05030c'); }
+      if (lit) { gr.addColorStop(0, '#1f4a8a'); gr.addColorStop(1, '#0b1430'); } else { gr.addColorStop(0, '#1b1433'); gr.addColorStop(1, '#05030c'); }
       g.fillStyle = gr; g.fillRect(0, 0, W, H);
       if (lit) {   // light rays + halftone once switched on
         g.save(); g.globalAlpha = 0.18 + 0.1 * m.pulse(t);
@@ -30,7 +32,10 @@ export default function make(ctx, t0, t1) {
         g.restore();
         halftone(g, '#ffffff', 0.05);
       }
-      if (lit) wallpaper(g, '#ffffff', 0.06, H * 0.8);
+      wallpaper(g, '#ffffff', lit ? 0.07 : 0.03, H * 0.8);
+      // the showroom stock along the back wall: barely visible in the dark, lit after the click
+      shelfRow(g, t, m, H * 0.8 - 2, 9, 0.7);
+      if (!lit) { g.fillStyle = 'rgba(5,3,12,0.72)'; g.fillRect(0, H * 0.45, W, H * 0.36); }
       hangingBulbs(g, t, m, 9, 28, lit ? 1 : 0);
       // floor + speakers that thump on every beat (even in the dark)
       g.fillStyle = lit ? '#24124d' : '#0b0718'; g.fillRect(0, H * 0.8, W, H * 0.2);
@@ -53,26 +58,38 @@ export default function make(ctx, t0, t1) {
       const items = [];
       if (t >= w1.start - 0.04) {
         const u = easeOutBack(prog(t, slide1, slide1 + 0.3), 1.6);
-        items.push({ k: 0, x: W / 2 + (W * 0.3) * u, y: H * 0.42, a: w1.start, wi: 0 });
+        items.push({ k: 0, x: W / 2 + (W * 0.29) * u, y: H * 0.42, a: w1.start, wi: 0, cap: 42 });
       }
       if (t >= w2.start - 0.04) {
         const u = easeOutBack(prog(t, slide2, slide2 + 0.3), 1.6);
-        items.push({ k: 1, x: W / 2 - (W * 0.3) * u, y: H * 0.42, a: w2.start, wi: 1 });
+        items.push({ k: 1, x: W / 2 - (W * 0.29) * u, y: H * 0.42, a: w2.start, wi: 1, cap: 42 });
       }
-      if (t >= pop3 - 0.04) items.push({ k: 2, x: W / 2, y: H * 0.62, a: pop3 });
+      if (t >= pop3 - 0.04) items.push({ k: 2, x: W / 2, y: H * 0.665, a: pop3, cap: 64 });   // the last one is bigger
       for (const it of items) {
         let s = easeOutBack(prog(t, it.a - 0.04, it.a + 0.16), 2.6);
-        if (lit) s *= 1 + springHit(t - m.bt(m.idx(t)), 16, 8) * 0.1 + 0.25 * decay(t - click, 6);
+        if (lit) s *= 1 + springHit(t - m.bt(m.idx(t)), 16, 8) * 0.08 + 0.2 * decay(t - click, 6);
         const col = colAt(it.k);
+        // neon sign: dark backing board with screws, glass tubes in the logo's letterforms
+        const bw = logoWordWidth(it.cap) + 46, bh = it.cap + 40;
         g.save(); g.translate(it.x, it.y); g.scale(s, s);
-        if (lit) { g.shadowColor = col; g.shadowBlur = 25; }
-        popText(g, 'T-POT', 0, 0, 74, { fill: col, outline: 12 });
+        rr(g, -bw / 2, -bh / 2, bw, bh, 12); fillStroke(g, '#15111f', 3, '#2e2842');
+        for (const [sx, sy] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) { circle(g, sx * (bw / 2 - 9), sy * (bh / 2 - 9), 3); g.fillStyle = '#4a4560'; g.fill(); }
+        // lights flicker on at the click, then stay on
+        const flick = lit && (t - click > 0.12 || Math.floor((t - click) / 0.03) % 2 === 0);
+        if (flick) {
+          drawLogoWord(g, 0, 0, it.cap, { fill: col, leafFill: col, glow: col, glowBlur: 26 });
+          drawLogoWord(g, 0, 0, it.cap, { fill: col, leafFill: col, glow: '#ffffff', glowBlur: 6 });
+        } else {   // unlit glass tubes: grey with a faint highlight
+          drawLogoWord(g, 0, 0, it.cap, { fill: '#5b586c', leafFill: '#5b586c', outline: 1.5, outlineCol: '#2a2738' });
+          g.globalAlpha = 0.35; drawLogoWord(g, -1.2, -1.2, it.cap, { fill: '#a9a6bd', leafFill: '#a9a6bd' }); g.globalAlpha = 1;
+          drawLogoWord(g, 0.6, 0.6, it.cap, { fill: '#5b586c', leafFill: '#5b586c' });
+        }
         g.restore();
         if (it.wi !== undefined) ctx.mark(it.wi);
       }
       if (t >= pop3 && t < pop3 + 0.3) {   // puff for the middle pop
         const u = prog(t, pop3, pop3 + 0.3);
-        for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2; circle(g, W / 2 + Math.cos(a) * 90 * u, H * 0.62 + Math.sin(a) * 40 * u, 14 * (1 - u)); g.fillStyle = 'rgba(255,255,255,0.7)'; g.fill(); }
+        for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2; circle(g, W / 2 + Math.cos(a) * 150 * u, H * 0.665 + Math.sin(a) * 50 * u, 16 * (1 - u)); g.fillStyle = 'rgba(255,255,255,0.7)'; g.fill(); }
       }
 
       // ---- pull cord: drops on TURN, grabbed on IT, yanked on ON
@@ -86,15 +103,21 @@ export default function make(ctx, t0, t1) {
         g.strokeStyle = '#e6d7a8'; g.lineWidth = 4; g.beginPath(); g.moveTo(cx, topY); g.lineTo(cx, endY); g.stroke();
         g.strokeStyle = INK; g.lineWidth = 1.5; g.beginPath(); g.moveTo(cx - 2, topY); g.lineTo(cx - 2, endY); g.stroke();
         circle(g, cx, endY + 10, 11); fillStroke(g, '#ffd400', 3);
-        // the hand: reaches up from the right on IT, grips, yanks down on ON, lets go
-        const reach = easeOut(prog(t, wIt.start - 0.15, wIt.start + 0.05));
-        const leave = easeOut(prog(t, click + 0.25, click + 0.6));
+        // a real arm stretches in from the right edge, the fingers close round the bead on
+        // "IT", it yanks the cord down hard on "ON" (motion lines), then lets go and withdraws
+        const reach = easeOut(prog(t, wIt.start - 0.3, wIt.start));
+        const leave = easeIn(prog(t, click + 0.3, click + 0.75));
         if (reach > 0 && leave < 1) {
-          const hx = cx + 14 + (1 - reach) * 260 + leave * 300, hy = endY + 16 - leave * 60;
-          g.strokeStyle = INK; g.lineWidth = 22; g.lineCap = 'round'; g.beginPath(); g.moveTo(hx + 190, hy - 10); g.lineTo(hx + 8, hy + 2); g.stroke();
-          g.strokeStyle = '#ff7a1a'; g.lineWidth = 16; g.stroke();
-          circle(g, hx, hy, 17); fillStroke(g, '#fff', 4);
-          for (let i = 0; i < 3; i++) { circle(g, hx - 12 + i * 9, hy - 12, 6); fillStroke(g, '#fff', 3); }
+          const grip = clamp(prog(t, wIt.start - 0.06, wIt.start + 0.06)) * (1 - clamp(prog(t, click + 0.22, click + 0.32)));
+          const HS = 1.25;
+          const bx = cx - 6, by = endY + 10;
+          const hx = bx + 6 * HS + (1 - reach) * 520 + leave * 520, hy = by + leave * 40;
+          drawArm(g, W + 60, hy + 70, hx + 46 * HS, hy + 2, 1.05, '#2a5bff');
+          drawHand(g, hx, hy, HS, grip, -0.05);
+          if (t >= click - 0.02 && t < click + 0.22) {   // pull motion lines
+            g.strokeStyle = 'rgba(255,255,255,0.85)'; g.lineWidth = 3; g.lineCap = 'round';
+            for (let i = 0; i < 3; i++) { const lx = hx + 6 + i * 16; g.beginPath(); g.moveTo(lx, hy - 70 - i * 6); g.lineTo(lx, hy - 34 - i * 6); g.stroke(); }
+          }
         }
       }
       // "TURN IT ON" written next to the cord, word by word

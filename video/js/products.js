@@ -88,3 +88,54 @@ export function drawTag(g, w, text, o = {}) {
   if (text) popText(g, text, h * 0.12, 0, h * (o.size || 0.48), { font: 'Bowlby', fill: o.color || INK, outline: 0, shadow: false });
   return { w, h };
 }
+
+// ---------------------------------------------------------------- more appliances
+export function drawFan(g, w, ang = 0) {
+  const R = w * 0.42;
+  g.beginPath(); g.ellipse(0, -4, w * 0.36, w * 0.08, 0, 0, Math.PI * 2); fillStroke(g, '#dfe3ee', 3);
+  rr(g, -w * 0.04, -w * 1.35, w * 0.08, w * 1.32, 4); fillStroke(g, '#c8ccd8', 3);
+  const cy = -w * 1.45;
+  g.save(); g.translate(0, cy); g.rotate(ang);
+  for (let i = 0; i < 3; i++) { g.rotate(Math.PI * 2 / 3); g.beginPath(); g.ellipse(0, -R * 0.5, R * 0.24, R * 0.5, 0, 0, Math.PI * 2); g.fillStyle = 'rgba(120,200,255,0.75)'; g.fill(); g.lineWidth = 2; g.strokeStyle = INK; g.stroke(); }
+  g.restore();
+  circle(g, 0, cy, R); g.lineWidth = 3; g.strokeStyle = INK; g.stroke();
+  for (let i = 0; i < 12; i++) { const a = i / 12 * Math.PI * 2; g.beginPath(); g.moveTo(0, cy); g.lineTo(Math.cos(a) * R, cy + Math.sin(a) * R); g.lineWidth = 1; g.strokeStyle = 'rgba(27,20,51,0.35)'; g.stroke(); }
+  circle(g, 0, cy, R * 0.14); fillStroke(g, COL.red, 2.5);
+  return { top: cy - R };
+}
+export function drawBlender(g, w, t = 0, on = 0) {
+  rr(g, -w * 0.32, -w * 0.4, w * 0.64, w * 0.4, 6); fillStroke(g, '#2a2440', 3);
+  circle(g, 0, -w * 0.2, w * 0.08); g.fillStyle = on ? '#2ee6a8' : '#8b8aa0'; g.fill();
+  g.beginPath(); g.moveTo(-w * 0.3, -w * 0.42); g.lineTo(w * 0.3, -w * 0.42); g.lineTo(w * 0.36, -w * 1.25); g.lineTo(-w * 0.36, -w * 1.25); g.closePath();
+  g.fillStyle = 'rgba(200,240,255,0.55)'; g.fill(); g.lineWidth = 3; g.strokeStyle = INK; g.stroke();
+  g.save(); g.clip(); g.fillStyle = '#ff6f8a'; g.fillRect(-w, -w * 0.85 + Math.sin(t * 20) * 2 * on, w * 2, w); g.restore();
+  rr(g, -w * 0.38, -w * 1.35, w * 0.76, w * 0.12, 4); fillStroke(g, '#2a2440', 3);
+  return { top: -w * 1.35 };
+}
+export function drawKettle(g, w) {
+  g.beginPath(); g.ellipse(0, -w * 0.06, w * 0.42, w * 0.07, 0, 0, Math.PI * 2); fillStroke(g, '#2a2440', 3);
+  g.beginPath(); g.moveTo(-w * 0.34, -w * 0.12); g.lineTo(w * 0.34, -w * 0.12); g.lineTo(w * 0.26, -w * 0.78); g.lineTo(-w * 0.26, -w * 0.78); g.closePath(); fillStroke(g, '#ff2a4d', 3);
+  g.beginPath(); g.moveTo(w * 0.3, -w * 0.62); g.quadraticCurveTo(w * 0.62, -w * 0.6, w * 0.5, -w * 0.25); g.lineWidth = 6; g.strokeStyle = INK; g.stroke();
+  g.beginPath(); g.moveTo(-w * 0.28, -w * 0.62); g.lineTo(-w * 0.5, -w * 0.82); g.lineWidth = 7; g.strokeStyle = INK; g.stroke();
+  rr(g, -w * 0.2, -w * 0.86, w * 0.4, w * 0.1, 3); fillStroke(g, '#2a2440', 2.5);
+  g.fillStyle = 'rgba(255,255,255,0.4)'; g.fillRect(-w * 0.2, -w * 0.7, w * 0.07, w * 0.45);
+  return { top: -w * 0.86 };
+}
+export function drawLaptop(g, w, screen) {
+  g.beginPath(); g.moveTo(-w * 0.55, 0); g.lineTo(w * 0.55, 0); g.lineTo(w * 0.47, -w * 0.07); g.lineTo(-w * 0.47, -w * 0.07); g.closePath(); fillStroke(g, '#c8ccd8', 3);
+  rr(g, -w * 0.44, -w * 0.68, w * 0.88, w * 0.6, 5); fillStroke(g, '#2a2440', 3);
+  g.save(); rr(g, -w * 0.4, -w * 0.64, w * 0.8, w * 0.52, 3); g.clip(); screen ? screen(g, -w * 0.4, -w * 0.64, w * 0.8, w * 0.52) : (g.fillStyle = '#16e0ff', g.fillRect(-w, -w, w * 2, w)); g.restore();
+  return { top: -w * 0.68 };
+}
+export function drawVacuum(g, w, t = 0) {
+  g.beginPath(); g.ellipse(0, -w * 0.12, w * 0.5, w * 0.16, 0, 0, Math.PI * 2); fillStroke(g, '#2a2440', 3);
+  g.beginPath(); g.ellipse(0, -w * 0.2, w * 0.46, w * 0.12, 0, 0, Math.PI * 2); fillStroke(g, '#4a4560', 2.5);
+  circle(g, 0, -w * 0.22, w * 0.05); g.fillStyle = Math.floor(t * 4) % 2 ? '#2ee6a8' : '#16e0ff'; g.fill();
+  return { top: -w * 0.3 };
+}
+export function drawTallSpeaker(g, w, pulse = 0) {
+  const h = w * 2.6;
+  rr(g, -w / 2, -h, w, h, 8); fillStroke(g, '#1b1630', 3);
+  for (const [k, r] of [[0.25, 0.22], [0.55, 0.36], [0.82, 0.3]]) { circle(g, 0, -h * k, w * r * (1 + pulse * 0.12)); fillStroke(g, '#3a3550', 2.5, '#000'); circle(g, 0, -h * k, w * r * 0.35); g.fillStyle = '#5a5570'; g.fill(); }
+  return { top: -h };
+}

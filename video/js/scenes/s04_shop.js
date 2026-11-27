@@ -30,12 +30,12 @@ export default function make(ctx, t0, t1) {
     pendantLamps(g, t, m, 6, GY);
     bunting(g, -10, 10, W + 10, 10, 10, t, 18, m.pulse(t));
     // checker floor in perspective
-    g.fillStyle = '#7b2cff'; g.fillRect(0, GY, W, H - GY);
+    g.fillStyle = '#c9d6e8'; g.fillRect(0, GY, W, H - GY);
     for (let r = 0; r < 6; r++) for (let c = -8; c < 16; c++) {
       if ((r + c) % 2) continue;
       const y0 = GY + r * (H - GY) / 6, y1 = GY + (r + 1) * (H - GY) / 6;
       const k0 = 1 + r * 0.25, k1 = 1 + (r + 1) * 0.25, cw = 60;
-      g.fillStyle = '#9b5cff'; g.beginPath();
+      g.fillStyle = '#eef3fa'; g.beginPath();
       g.moveTo(W / 2 + (c - 4) * cw * k0, y0); g.lineTo(W / 2 + (c - 3) * cw * k0, y0); g.lineTo(W / 2 + (c - 3) * cw * k1, y1); g.lineTo(W / 2 + (c - 4) * cw * k1, y1); g.fill();
     }
   }
@@ -68,7 +68,7 @@ export default function make(ctx, t0, t1) {
       // camera: punch into Pip's face on PRICE, closer again on RIGHT
       const z1 = easeOutBack(prog(t, shockT - 0.03, shockT + 0.22), 1.6), z2 = easeOutBack(prog(t, wRight.start - 0.03, wRight.start + 0.18), 2);
       const Z = 1 + z1 * 1.5 + z2 * 0.6;
-      const fx = pip.x, fy = pip.y - 70;
+      const fx = pip.x, fy = pip.y - 84;
       g.save();
       g.translate(lerp(fx, W * 0.5, clamp(Z - 1)), lerp(fy, H * 0.47, clamp(Z - 1))); g.scale(Z, Z); g.translate(-fx, -fy);
       store(g, t);

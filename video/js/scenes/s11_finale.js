@@ -1,12 +1,13 @@
 // 11. Instrumental outro: THE LETTERS RUN, THEN BECOME THE LOGO.
-// A festive stage (sunburst, bunting, balloons, lights, confetti, fireworks on the beat).
+// A bright appliance showroom in the brand colours; an electrical product drops onto the
+// floor on every beat; confetti bursts on every beat.
 // The real T-POT logo letters (T, -, P, O, T, traced from the artwork) sprout little legs
 // and race back and forth, hopping on every beat. On the downbeat they leap into place and
 // land as the logo; the green swoosh sweeps in on the next 8th and the leaf pops on the
 // beat. Products slam onto pedestals, the whole cast dances. On the final downbeat:
 // one big punch + confetti, then everything stops on the logo.
 import { W, H, INK, clamp, prog, lerp, easeOut, easeIn, easeInOut, easeOutBack, easeOutBounce, springHit, decay, popText, rr, circle, fillStroke, star, COL, RAINBOW, hash } from '../core.js';
-import { drawTV, screenGlow, drawWasher, drawFridge, drawRice } from '../products.js';
+import { drawTV, screenGlow, drawWasher, drawFridge, drawRice, drawFan, drawMicrowave, drawBlender, drawKettle, drawTallSpeaker, drawVacuum, drawAircon, drawLaptop } from '../products.js';
 import { drawBuddy, pose, SKINS, crowdSkin } from '../characters.js';
 import { sunburst, bunting, balloon, confetti, sparkles, coin } from '../world.js';
 import { drawPart, homeOf } from '../logo.js';
@@ -24,6 +25,17 @@ export default function make(ctx, t0, t1) {
   const leapT = A - P;                                        // leap one beat before, land ON the downbeat
   const swooshT = A + P / 2, leafT = A + P;
   const slams = [A + 2 * P, A + 3 * P, A + 4 * P, A + 5 * P];
+  // the drop schedule: one product per beat from the start of the outro to the final hit
+  const DROPS = [
+    (g) => drawTV(g, 120, (g, x, y, w, h) => screenGlow(g, x, y, w, h, '#16b8ff', '#ff2a4d')), (g, t) => drawWasher(g, 82, t * 5), (g) => drawFridge(g, 46),
+    (g) => drawRice(g, 82), (g, t) => drawFan(g, 54, t * 14), (g) => drawMicrowave(g, 92), (g, t) => drawBlender(g, 46, t, 1), (g) => drawKettle(g, 62),
+    (g, t) => drawTallSpeaker(g, 42, m.pulse(t)), (g, t) => drawVacuum(g, 84, t), (g) => drawAircon(g, 110), (g) => drawLaptop(g, 84, (g, x, y, w, h) => screenGlow(g, x, y, w, h)),
+    (g) => drawTV(g, 100, (g, x, y, w, h) => screenGlow(g, x, y, w, h, '#3ea74d', '#16b8ff')),
+  ];
+  const dropBeats = m.beatsBetween(t0 + 0.05, FINAL + 0.01).map((b) => b.t);
+  const NS = dropBeats.length;
+  const fillOrder = []; { const seen = new Set(); const rec = (lo, hi) => { if (lo > hi) return; const mid = (lo + hi) >> 1; fillOrder.push(mid); rec(lo, mid - 1); rec(mid + 1, hi); }; rec(0, NS - 1); }
+  const drops = dropBeats.map((bt, k) => ({ t: bt, kind: k % DROPS.length, x: (fillOrder[k] + 0.5) * W / NS, s: 0.62 }));
   const cast = [
     { skin: SKINS.pip, x: 90 }, { skin: SKINS.mimi, x: W - 90 },
     { skin: crowdSkin(2), x: 190 }, { skin: crowdSkin(5), x: W - 190 },
@@ -52,29 +64,41 @@ export default function make(ctx, t0, t1) {
     name: 'finale', caption: null, shake: (t) => (t < STOP ? 0.6 : 0),
     draw(g, tReal) {
       const t = Math.min(tReal, STOP);   // freeze at the end: "just stop there"
-      // backdrop
-      sunburst(g, W / 2, LY, 22, t * 0.25, '#7b2cff', '#9b5cff');
-      // fireworks on every beat after the assembly
-      if (t >= A) {
-        for (let k = 0; k < 3; k++) {
-          const bi = m.idx(t) - k; if (m.bt(bi) < A) continue;
-          const bt = m.bt(bi), dt = t - bt, fx = 120 + hash(bi * 3.3) * (W - 240), fy = 60 + hash(bi * 7.7) * 90, col = RAINBOW[bi % 8];
-          for (let i = 0; i < 16; i++) { const a = i / 16 * Math.PI * 2; const r = easeOut(dt / 0.6) * 70; circle(g, fx + Math.cos(a) * r, fy + Math.sin(a) * r + dt * dt * 40, 3.5 * (1 - clamp(dt / 0.9))); g.fillStyle = col; g.fill(); }
-        }
+      // backdrop: a bright, clean appliance showroom in the brand colours (white / red / green)
+      const bgG = g.createLinearGradient(0, 0, 0, GY); bgG.addColorStop(0, '#ffffff'); bgG.addColorStop(1, '#e4ebf5');
+      g.fillStyle = bgG; g.fillRect(0, 0, W, GY);
+      g.save(); g.globalAlpha = 0.5;
+      for (let i = 0; i < 24; i++) { const a0 = t * 0.15 + i * Math.PI / 12; g.fillStyle = i % 2 ? '#ffffff' : '#eef2f8'; g.beginPath(); g.moveTo(W / 2, LY); g.lineTo(W / 2 + Math.cos(a0) * 900, LY + Math.sin(a0) * 900); g.lineTo(W / 2 + Math.cos(a0 + Math.PI / 12) * 900, LY + Math.sin(a0 + Math.PI / 12) * 900); g.fill(); }
+      g.restore();
+      for (let i = 0; i < 9; i++) {   // ceiling spotlights, evenly spaced, pulsing on the beat
+        const x = (i + 0.5) * W / 9;
+        rr(g, x - 13, 0, 26, 10, 3); fillStroke(g, '#2a2440', 2);
+        g.save(); g.globalAlpha = 0.14 + 0.14 * m.pulse(t); g.fillStyle = '#fff1b8'; g.beginPath(); g.moveTo(x - 9, 10); g.lineTo(x + 9, 10); g.lineTo(x + 50, GY); g.lineTo(x - 50, GY); g.fill(); g.restore();
       }
-      bunting(g, -10, 12, W / 2, 40, 12, t, 10, m.pulse(t)); bunting(g, W / 2, 40, W + 10, 12, 12, t, 10, m.pulse(t));
-      bunting(g, -10, 60, W + 10, 60, 18, t + 1, 20, m.pulse(t));
-      for (let i = 0; i < 8; i++) balloon(g, 40 + i * 110 + (i % 2) * 20, 330 - (i % 3) * 40, 20, RAINBOW[(i + 2) % 8], t, i);
-      // stage floor with chasing lights
-      g.fillStyle = '#2a1650'; g.fillRect(0, GY, W, H - GY);
-      for (let i = 0; i < 18; i++) { circle(g, 24 + i * 48, GY + 14, 6); g.fillStyle = (i + m.idx(t)) % 3 === 0 ? COL.yellow : '#5a3a90'; g.fill(); }
-      // pedestals + products slamming on the beats
-      const peds = [{ x: 70, d: (g) => drawTV(g, 120, (g, x, y, w, h) => screenGlow(g, x, y, w, h)) }, { x: W - 70, d: (g) => drawWasher(g, 80, t * 6) }, { x: 170, d: (g) => drawFridge(g, 44) }, { x: W - 170, d: (g) => drawRice(g, 80) }];
-      peds.forEach((p, i) => {
-        rr(g, p.x - 44, GY - 30, 88, 30, 6); fillStroke(g, COL.tred, 3);
-        const st = slams[i]; if (t < st - 0.3) return;
-        const u = clamp((t - (st - 0.3)) / 0.3), y = GY - 30 - (1 - easeIn(u)) * 400 - Math.abs(springHit(t - st, 14, 6)) * 10;
-        g.save(); g.translate(p.x, y); p.d(g); g.restore();
+      g.fillStyle = COL.tred; g.fillRect(0, GY - 112, W, 10); g.fillStyle = '#3ea74d'; g.fillRect(0, GY - 102, W, 4);
+      // symmetric wall displays either side of the logo: aircon above a mounted TV, bouncing on the beat
+      for (const sx of [-1, 1]) {
+        const x = W / 2 + sx * 360, hop = Math.max(0, springHit(m.since(t), 16, 9)) * 4;
+        g.save(); g.translate(x, 118 - hop); drawAircon(g, 104); g.restore();
+        g.save(); g.translate(x, 252 - hop); drawTV(g, 118, (g, x0, y0, w, h) => { screenGlow(g, x0, y0, w, h, sx < 0 ? '#16b8ff' : '#3ea74d', '#ff2a4d'); popText(g, 'T-POT', x0 + w / 2, y0 + h / 2, 22, {}); }); g.restore();
+      }
+      // confetti bursts from alternating top corners on every beat
+      { const bi = m.idx(t); if (bi >= 0) confetti(g, t, m.bt(bi), { n: 22, from: { x: bi % 2 ? W - 40 : 40, y: 30 }, spread: 1.4, life: 0.9, seed: bi }); }
+      bunting(g, -10, 22, W / 2, 46, 12, t, 10, m.pulse(t)); bunting(g, W / 2, 46, W + 10, 22, 12, t, 10, m.pulse(t));
+      for (let i = 0; i < 8; i++) balloon(g, (i + 0.5) * W / 8, 300 - (i % 2) * 34, 18, ['#e41b24', '#ffffff', '#3ea74d', '#ffd400'][i % 4], t, i);
+      // floor: polished light tiles
+      g.fillStyle = '#cdd6e4'; g.fillRect(0, GY, W, H - GY);
+      for (let x = 0; x < W; x += 57) { g.fillStyle = 'rgba(255,255,255,0.55)'; g.fillRect(x, GY, 2, H - GY); }
+      g.fillStyle = 'rgba(255,255,255,0.5)'; g.fillRect(0, GY + 2, W, 4);
+      // an electrical product drops from the top onto the floor on EVERY beat, filling evenly
+      // spaced slots in an order that keeps the floor balanced (never bunched on one side)
+      drops.forEach((d, k) => {
+        if (t < d.t - 0.3) return;
+        const u = clamp((t - (d.t - 0.3)) / 0.3);
+        const y = GY - 4 - (1 - easeIn(u)) * (GY + 40) - Math.abs(springHit(t - d.t, 16, 7)) * 10;
+        const sq = t > d.t ? 1 + springHit(t - d.t, 24, 9) * 0.15 : 1;
+        g.save(); g.translate(d.x, y); g.scale(d.s / sq, d.s * sq); DROPS[d.kind](g, t); g.restore();
+        if (t >= d.t && t < d.t + 0.35) { const q = prog(t, d.t, d.t + 0.35); for (let i = 0; i < 6; i++) { circle(g, d.x + (i - 2.5) * 12 * (0.6 + q), GY - 4 - q * 10, 7 * (1 - q)); g.fillStyle = 'rgba(255,255,255,0.9)'; g.fill(); } }
       });
       // the cast dances in front (after the letters have assembled)
       if (t >= A) cast.forEach((c, i) => {

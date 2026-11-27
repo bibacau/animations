@@ -4,15 +4,18 @@
 // everyone. The real T-POT logo glows on the stage wall, stage lights sweep, the backdrop
 // colour swaps on each downbeat, coins (savings!) rain down. On "NEVER STOP" the whole
 // crowd jumps on every beat.
-import { W, H, INK, clamp, prog, lerp, easeOut, easeOutBack, springHit, decay, popText, rr, circle, fillStroke, COL, RAINBOW, hash } from '../core.js';
+import { W, H, INK, clamp, prog, lerp, easeOut, easeInOut, easeOutBack, springHit, decay, popText, rr, circle, fillStroke, COL, RAINBOW, hash } from '../core.js';
 import { drawBuddy, pose, SKINS, crowdSkin } from '../characters.js';
 import { sunburst, confetti, coin, sparkles, bunting, balloon } from '../world.js';
-import { drawPart } from '../logo.js';
+import { drawPart, drawLogoWord } from '../logo.js';
+import { captionLayout } from '../lyrics.js';
 
 export default function make(ctx, t0, t1) {
   const m = ctx.music, wd = m.wordsIn(t0, t1), L = ctx.logo;
   const wNever = wd.find((w) => w.text === 'NEVER');
   const wTpot = wd[0];
+  const landT = wd[1].start - 0.03, flyT = landT - m.P * 0.75;   // fly on the beat before WHERE, land on WHERE
+  let lay = null;
   const rows = [
     { n: 10, y: H - 175, s: 0.5, dt: m.P / 2 },
     { n: 9, y: H - 105, s: 0.66, dt: m.P / 4 },
@@ -28,10 +31,12 @@ export default function make(ctx, t0, t1) {
       people.push({ x, y: r.y, s: r.s * (0.92 + hash(i * 5 + ri) * 0.16), skin, dt: r.dt, ri, i, flip: hash(i + ri * 3) > 0.5 });
     }
   });
-  const BG = [['#2a0a5e', '#4a1590'], ['#0a2a5e', '#15508f'], ['#5e0a3a', '#8f1560'], ['#0a4a3a', '#15806a']];
+  const BG = [['#b80f2a', '#e0283f'], ['#0b4f94', '#1773c7'], ['#22803d', '#36a352'], ['#c45f00', '#f08214']];   // brand-ish: red / electric blue / green / orange
 
   return {
-    name: 'crowd', caption: { pos: 'top', size: 40, y: 40 }, shake: 1.0,
+    name: 'crowd', shake: 1.0,
+    // the caption's first word stays hidden until the big T-POT has flown into its slot
+    caption: (t) => ({ pos: 'top', size: 40, y: 40, hide: t < landT ? [0] : [] }),
     draw(g, t) {
       const bar = Math.floor((m.idx(t) - 3) / 4);
       const [c1, c2] = BG[((bar % 4) + 4) % 4];
@@ -68,10 +73,23 @@ export default function make(ctx, t0, t1) {
         drawBuddy(g, { x: p.x, y, s: p.s, skin: p.skin, ...ps, face: jumping ? 'joy' : (p.ri === 2 ? 'happy' : 'happy'), t, flip: p.flip, look: { x: 0, y: -0.6 }, blink: 0 });
       }
       if (jumping) confetti(g, t, wNever.start, { n: 80 });
-      // big "T-POT" slam on the first word (the caption also carries the line)
-      if (t >= wTpot.start - 0.04 && t < wd[1].start) {
-        const s = easeOutBack(prog(t, wTpot.start - 0.04, wTpot.start + 0.15), 2.5) * (1 + m.pulse(t) * 0.1);
-        g.save(); g.translate(W / 2, 262); g.scale(s, s); popText(g, 'T-POT', 0, 0, 84, { fill: COL.yellow, outline: 12 }); g.restore();
+      // big "T-POT" slams in the middle, then flies up to the top-left and becomes the first
+      // word of the lyric line, landing on the beat of "WHERE"
+      if (t >= wTpot.start - 0.04) {
+        if (!lay) lay = captionLayout(g, m, m.phrases[m.words.indexOf(wTpot) >= 0 ? wTpot.line : 0], { pos: 'top', size: 40, y: 40 });
+        const target = { x: lay.xs[0], y: lay.y, cap: lay.size * 0.7 };
+        const u = easeInOut(prog(t, flyT, landT));
+        const pop = easeOutBack(prog(t, wTpot.start - 0.04, wTpot.start + 0.15), 2.5);
+        const big = 66 * (1 + m.pulse(t) * 0.08 * (1 - u));
+        const cap = lerp(big * pop, target.cap, u);
+        const x = lerp(W / 2, target.x, u), y = lerp(262, target.y, u) - Math.sin(u * Math.PI) * 40;
+        if (t < landT + 0.02) {
+          g.save(); g.translate(x, y); g.rotate(Math.sin(u * Math.PI) * -0.25);
+          drawLogoWord(g, 0, 0, cap, { outline: Math.max(2, cap * 0.09), outlineCol: '#fff' });
+          g.restore();
+          for (let i = 1; i <= 3 && u > 0 && u < 1; i++) { g.save(); g.globalAlpha = 0.25 / i; drawLogoWord(g, lerp(W / 2, target.x, u - i * 0.06), lerp(262, target.y, u - i * 0.06), cap, {}); g.restore(); }
+        }
+        ctx.mark(wTpot.i);
       }
     },
   };

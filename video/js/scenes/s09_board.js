@@ -12,17 +12,19 @@ export default function make(ctx, t0, t1) {
   const m = ctx.music, wd = m.wordsIn(t0, t1);
   const wOh = wd.find((w) => w.text === 'OH');
   const items = [
-    { name: 'SMART TV', draw: (g) => drawTV(g, 110, (g, x, y, w, h) => screenGlow(g, x, y, w, h)), prices: [4999, 3999, 2999, 1999] },
-    { name: 'WASHER', draw: (g) => drawWasher(g, 66, 0), prices: [2899, 2299, 1799, 1299] },
-    { name: 'FRIDGE', draw: (g) => drawFridge(g, 40), prices: [3599, 2999, 2399, 1899] },
-    { name: 'RICE COOKER', draw: (g) => drawRice(g, 80), prices: [399, 299, 199, 129] },
-    { name: 'AIRCON', draw: (g) => drawAircon(g, 120), prices: [2499, 1999, 1599, 1199] },
-    { name: 'MICROWAVE', draw: (g) => drawMicrowave(g, 96), prices: [699, 549, 399, 299] },
+    { name: 'SMART TV', draw: (g) => drawTV(g, 110, (g, x, y, w, h) => screenGlow(g, x, y, w, h)), prices: [3999, 2666, 1333] },
+    { name: 'WASHER', draw: (g) => drawWasher(g, 66, 0), prices: [2697, 1798, 899] },
+    { name: 'FRIDGE', draw: (g) => drawFridge(g, 40), prices: [2997, 1998, 999] },
+    { name: 'RICE COOKER', draw: (g) => drawRice(g, 80), prices: [597, 398, 199] },
+    { name: 'AIRCON', draw: (g) => drawAircon(g, 120), prices: [2397, 1598, 799] },
+    { name: 'MICROWAVE', draw: (g) => drawMicrowave(g, 96), prices: [897, 598, 299] },
   ];
-  // schedule: beat k of the scene drops item k % 6 (so every item drops at least once)
-  const beats = [];
-  for (let i = m.idx(t0) + 1; m.bt(i) < t1 - 0.1; i++) beats.push(m.bt(i));
-  const drops = beats.map((bt, k) => ({ t: bt, item: k % items.length, step: Math.floor(k / items.length) + 1 }));
+  // schedule: a drop on every 8th note from the first beat; 12 drops = each product twice
+  // (original -> two thirds -> ONE THIRD of the original price)
+  const slots = [];
+  for (let i = m.idx(t0) + 1; m.bt(i) < t1 - 0.2; i++) { slots.push(m.bt(i)); slots.push(m.bt(i) + m.P / 2); }
+  const order = [0, 3, 1, 4, 2, 5];
+  const drops = slots.slice(0, 12).map((bt, k) => ({ t: bt, item: order[k % 6], step: Math.floor(k / 6) + 1 }));
   items.forEach((it, i) => { it.drops = drops.filter((d) => d.item === i); });
   const fmt = (n) => 'RM' + n.toLocaleString('en-US');
 
@@ -78,7 +80,7 @@ export default function make(ctx, t0, t1) {
         }
         // % sticker after the first drop
         if (it.drops[0] && t >= it.drops[0].t) {
-          const off = Math.round((1 - cur / it.prices[0]) * 100);
+          const off = Math.round((1 - cur / it.prices[0]) * 100);   // ends at -67%
           const s = easeOutBack(prog(t, it.drops[0].t, it.drops[0].t + 0.2), 3);
           g.save(); g.translate(cw / 2 - 14, -ch / 2 + 10); g.rotate(0.25); g.scale(s, s);
           star(g, 0, 0, 28, 21, 12, t); fillStroke(g, COL.red, 3);

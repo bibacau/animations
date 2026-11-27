@@ -5,6 +5,7 @@
 // standing at the end of the road all along. On "T-POT" its doors blaze: we've arrived. Lamp posts flick past on the beat.
 import { W, H, INK, clamp, prog, lerp, easeOut, easeIn, easeOutBack, springHit, decay, popText, rr, circle, fillStroke, COL, RAINBOW, hash } from '../core.js';
 import { drawStore, speedLines, sparkles, confetti } from '../world.js';
+import { shade as shadeHex } from '../characters.js';
 
 export default function make(ctx, t0, t1) {
   const m = ctx.music, wd = m.wordsIn(t0, t1);
@@ -19,19 +20,104 @@ export default function make(ctx, t0, t1) {
   const vMax = speed(stopT - 1e-3);
   // the T-POT store stands at the end of the road the whole time; we stop right in front of it
   const zStore = dist(stopT) + 420, STW = 520, STH = 300;
-  const buildings = [];
-  for (let i = 0; i < 400; i++) buildings.push({ z: i * 90 + hash(i) * 30, side: i % 2 ? 1 : -1, w: 90 + hash(i * 3) * 90, h: 120 + hash(i * 7) * 260, col: ['#4a2585', '#5e2a8f', '#3d1f73', '#7b2c9f', '#2a5bff'][i % 5], seed: i, sign: hash(i * 11) > 0.6 });
+  // ---- the street: continuous rows of buildings on both sides (and beside the store),
+  // lamps, trees, billboards, overtaken cars. Everything placed by world z, drawn far -> near.
+  const ROADW = 260, WALK = 70, XIN = ROADW + WALK;
+  const BCOL = ['#3c4a7a', '#5a3f7a', '#2f5a78', '#6b4a60', '#45607e', '#574b8a'];
+  const items = [];
+  for (const side of [-1, 1]) {
+    let zz = side < 0 ? 0 : 35;
+    for (let i = 0; zz < zStore + 900; i++) {
+      const dep = 70 + hash(i * 3 + side) * 70;
+      items.push({ kind: 'bld', side, z0: zz, z1: zz + dep, h: 110 + hash(i * 7 + side * 3) * 240, w: 160, col: BCOL[(i + (side > 0 ? 3 : 0)) % BCOL.length], seed: i * 13 + (side > 0 ? 7 : 0),
+        sign: hash(i * 11 + side) > 0.55 ? ['SALE', 'T-POT', 'OPEN', 'DEALS', '24H', 'TV'][(i * 7 + (side > 0 ? 1 : 0)) % 6] : null });
+      zz += dep + 4;
+    }
+  }
+  for (let zz = 40; zz < zStore - 30; zz += 80) for (const side of [-1, 1]) items.push({ kind: 'lamp', side, z: zz + (side > 0 ? 40 : 0) });
+  for (let zz = 80; zz < zStore - 60; zz += 160) for (const side of [-1, 1]) items.push({ kind: 'tree', side, z: zz + (side > 0 ? 80 : 0) });
+  for (let zz = 600; zz < zStore - 400; zz += 900) for (const side of [-1, 1]) items.push({ kind: 'board', side, z: zz + (side > 0 ? 450 : 0), ad: (Math.round(zz / 900) + (side > 0 ? 1 : 0)) % 2 });
+  const cars = [];
+  // 9 cars, all overtaken before we stop
+  for (let i = 0; i < 9; i++) cars.push({ z0: 260 + i * 240, lane: i % 2 ? 110 : -110, v: 70 + hash(i) * 40, col: ['#ff2a4d', '#ffd400', '#16b8ff', '#ffffff', '#2ee6a8'][i % 5] });
+  const P_ = (X, Y, d) => ({ x: W / 2 + X * F / d, y: HZ + (CAMH - Y) * F / d });
+
+  function sky(g, t) {
+    const gr = g.createLinearGradient(0, 0, 0, HZ); gr.addColorStop(0, '#0c1236'); gr.addColorStop(0.6, '#3b2a6e'); gr.addColorStop(1, '#ff9a6b');
+    g.fillStyle = gr; g.fillRect(0, 0, W, HZ + 2);
+    for (let i = 0; i < 46; i++) { const x = (i + 0.5) * W / 46 + (hash(i) - 0.5) * 14, y = 10 + hash(i * 7) * (HZ * 0.55), tw = 0.5 + 0.5 * Math.sin(t * 3 + i); g.fillStyle = `rgba(255,255,255,${0.35 + 0.55 * tw})`; g.fillRect(x, y, 2, 2); }
+    circle(g, W * 0.84, 46, 22); g.fillStyle = '#fff3c4'; g.fill(); circle(g, W * 0.84 - 8, 41, 5); g.fillStyle = '#efdca0'; g.fill();
+    for (let i = 0; i < 4; i++) { const cx = ((i + 0.5) * W / 4 + t * 6) % (W + 120) - 60, cy = 60 + (i % 2) * 34; g.fillStyle = 'rgba(255,200,220,0.35)'; for (const [dx, r] of [[-22, 14], [0, 20], [24, 15]]) { circle(g, cx + dx, cy, r); g.fill(); } }
+    for (let x = 0; x < W; x += 30) { const h = 28 + hash(x) * 56; g.fillStyle = '#26204a'; g.fillRect(x, HZ - h, 28, h); for (let wy = HZ - h + 6; wy < HZ - 4; wy += 9) for (let wx = x + 4; wx < x + 26; wx += 8) if (hash(wx * 3 + wy) > 0.55) { g.fillStyle = '#ffd86b'; g.fillRect(wx, wy, 3, 4); } }
+  }
+  function bld(g, b, z) {
+    const d0 = b.z0 - z, d1 = b.z1 - z;
+    if (d1 <= 4 || d0 > 3200) return;
+    const n0 = Math.max(d0, 4);
+    const s = b.side, xi = s * XIN, xo = s * (XIN + b.w);
+    const a0 = P_(xi, 0, n0), a1 = P_(xi, 0, d1), t0_ = P_(xi, b.h, n0), t1_ = P_(xi, b.h, d1);
+    g.beginPath(); g.moveTo(a0.x, a0.y); g.lineTo(a1.x, a1.y); g.lineTo(t1_.x, t1_.y); g.lineTo(t0_.x, t0_.y); g.closePath();
+    g.fillStyle = b.col; g.fill(); g.lineWidth = 1.5; g.strokeStyle = 'rgba(10,8,30,0.8)'; g.stroke();
+    const cols = 4, rows = Math.floor(b.h / 34);
+    for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
+      if (hash(b.seed * 9 + r * 5 + c) < 0.35) continue;
+      const zA = lerp(b.z0, b.z1, (c + 0.25) / cols), zB = lerp(b.z0, b.z1, (c + 0.75) / cols);
+      const dA = zA - z, dB = zB - z; if (dA < 4) continue;
+      const yA = b.h - 16 - r * 34, yB = yA - 18;
+      const p1 = P_(xi, yA, dA), p2 = P_(xi, yA, dB), p3 = P_(xi, yB, dB), p4 = P_(xi, yB, dA);
+      g.beginPath(); g.moveTo(p1.x, p1.y); g.lineTo(p2.x, p2.y); g.lineTo(p3.x, p3.y); g.lineTo(p4.x, p4.y); g.closePath(); g.fillStyle = hash(b.seed + r * 3 + c) > 0.25 ? '#ffd86b' : '#1d1a3a'; g.fill();
+    }
+    if (d0 > 4) {
+      const f0 = P_(xi, 0, d0), f1 = P_(xo, b.h, d0);
+      g.fillStyle = shadeHex(b.col, -0.25); g.fillRect(Math.min(f0.x, f1.x), f1.y, Math.abs(f1.x - f0.x), f0.y - f1.y);
+      if (b.sign && F / d0 > 0.25) { const sp = P_(xi + s * 60, b.h + 26, d0); popText(g, b.sign, sp.x, sp.y, 22 * F / d0, { fill: RAINBOW[b.seed % 8], outline: 3 * F / d0, shadow: false }); }
+    }
+  }
+  function lamp(g, it, z) {
+    const d = it.z - z; if (d < 6 || d > 2600) return;
+    const X = it.side * (ROADW + 22), base = P_(X, 0, d), top = P_(X, 110, d), arm = P_(X - it.side * 40, 110, d);
+    g.strokeStyle = '#1b1433'; g.lineWidth = Math.max(1, 5 * F / d); g.beginPath(); g.moveTo(base.x, base.y); g.lineTo(top.x, top.y); g.lineTo(arm.x, arm.y); g.stroke();
+    g.save(); g.shadowColor = '#fff2a8'; g.shadowBlur = 14; circle(g, arm.x, arm.y + 3 * F / d, 6 * F / d); g.fillStyle = '#fff2a8'; g.fill(); g.restore();
+  }
+  function tree(g, it, z) {
+    const d = it.z - z; if (d < 6 || d > 2600) return;
+    const X = it.side * (ROADW + 48), base = P_(X, 0, d), top = P_(X, 60, d), sc = F / d;
+    g.strokeStyle = '#5a3a24'; g.lineWidth = Math.max(1, 9 * sc); g.beginPath(); g.moveTo(base.x, base.y); g.lineTo(top.x, top.y); g.stroke();
+    for (const [dx, dy, r] of [[0, 18, 34], [-20, 4, 24], [20, 4, 24]]) { circle(g, top.x + dx * sc, top.y - dy * sc, r * sc); g.fillStyle = '#2f8a4a'; g.fill(); g.lineWidth = Math.max(1, 2 * sc); g.strokeStyle = '#1b5a2e'; g.stroke(); }
+  }
+  function board(g, it, z) {
+    const d = it.z - z; if (d < 10 || d > 3000) return;
+    const sc = F / d, X = it.side * (XIN + 40), base = P_(X, 0, d), c = P_(X, 210, d);
+    g.strokeStyle = '#2a2440'; g.lineWidth = Math.max(1, 6 * sc); g.beginPath(); g.moveTo(base.x, base.y); g.lineTo(c.x, c.y); g.stroke();
+    const bw = 190 * sc, bh = 90 * sc;
+    rr(g, c.x - bw / 2, c.y - bh, bw, bh, 6 * sc); fillStroke(g, it.ad ? '#ffffff' : COL.yellow, Math.max(1, 3 * sc));
+    if (sc > 0.08) popText(g, it.ad ? 'T-POT' : 'BIG SALE', c.x, c.y - bh / 2, (it.ad ? 34 : 26) * sc, { fill: COL.red, outline: 2 * sc, shadow: false });
+  }
+  function car(g, c, cz, z) {
+    const d = cz - z; if (d < 30 || d > 2600) return;
+    const sc = F / d, p = P_(c.lane, 0, d), w = 90 * sc, h = 52 * sc;
+    rr(g, p.x - w / 2, p.y - h, w, h, 10 * sc); fillStroke(g, c.col, Math.max(1, 2.5 * sc));
+    rr(g, p.x - w * 0.36, p.y - h * 1.32, w * 0.72, h * 0.42, 8 * sc); fillStroke(g, shadeHex(c.col, -0.2), Math.max(1, 2.5 * sc));
+    rr(g, p.x - w * 0.3, p.y - h * 1.25, w * 0.6, h * 0.3, 5 * sc); g.fillStyle = '#9fdcff'; g.fill();
+    for (const sx of [-1, 1]) { g.save(); g.shadowColor = '#ff2a4d'; g.shadowBlur = 10; rr(g, p.x + sx * w * 0.36 - w * 0.08, p.y - h * 0.7, w * 0.16, h * 0.18, 3 * sc); g.fillStyle = '#ff3b5c'; g.fill(); g.restore(); }
+    g.fillStyle = '#15111f'; g.fillRect(p.x - w * 0.42, p.y - 4 * sc, w * 0.18, 8 * sc); g.fillRect(p.x + w * 0.24, p.y - 4 * sc, w * 0.18, 8 * sc);
+  }
+  function sideStuff(g, t, z) {
+    const vis = [];
+    for (const it of items) { const zn = it.kind === 'bld' ? it.z0 : it.z; if (zn - z < 3200 && (it.kind === 'bld' ? it.z1 - z > 4 : zn - z > 6)) vis.push({ it, zz: zn }); }
+    for (const c of cars) { const cz = c.z0 + c.v * (Math.min(t, stopT) - t0); vis.push({ it: { kind: 'car', c, cz }, zz: cz }); }
+    vis.sort((a, b) => b.zz - a.zz);
+    for (const { it } of vis) {
+      if (it.kind === 'bld') bld(g, it, z); else if (it.kind === 'lamp') lamp(g, it, z); else if (it.kind === 'tree') tree(g, it, z);
+      else if (it.kind === 'board') board(g, it, z); else car(g, it.c, it.cz, z);
+    }
+  }
 
   function road(g, t) {
     const z = dist(t);
-    // sunset sky + sun + skyline
-    const gr = g.createLinearGradient(0, 0, 0, HZ); gr.addColorStop(0, '#2a0a5e'); gr.addColorStop(1, '#ff7a6b');
-    g.fillStyle = gr; g.fillRect(0, 0, W, HZ + 2);
-    circle(g, W / 2, HZ - 10, 70); g.fillStyle = '#ffd36b'; g.fill();
-    for (let i = 0; i < 6; i++) { g.fillStyle = '#ff7a6b'; g.fillRect(W / 2 - 80, HZ - 50 + i * 8, 160, 3); }
-    for (let x = 0; x < W; x += 28) { const h = 20 + hash(x) * 50; g.fillStyle = '#3b1060'; g.fillRect(x, HZ - h, 26, h); }
+    sky(g, t);
     // ground
-    g.fillStyle = '#1e7a3e'; g.fillRect(0, HZ, W, H - HZ);
+    g.fillStyle = '#3a3a52'; g.fillRect(0, HZ, W, H - HZ);
     // road strips, far -> near
     const first = Math.floor(z / SEG);
     const last = Math.floor(zStore / SEG);
@@ -48,7 +134,6 @@ export default function make(ctx, t0, t1) {
       for (const s of [-1, 1]) { g.beginPath(); g.moveTo(W / 2 + s * w1, y1); g.lineTo(W / 2 + s * w1 * 1.08, y1); g.lineTo(W / 2 + s * w0 * 1.08, y0); g.lineTo(W / 2 + s * w0, y0); g.fill(); }
       if (n % 2) { g.fillStyle = '#ffd400'; g.beginPath(); g.moveTo(W / 2 - w1 * 0.03, y1); g.lineTo(W / 2 + w1 * 0.03, y1); g.lineTo(W / 2 + w0 * 0.03, y0); g.lineTo(W / 2 - w0 * 0.03, y0); g.fill(); }
     }
-    // buildings both sides, far -> near
     // the store (drawn first: it is the farthest thing on the road)
     const ds = zStore - z, ss = F / ds;
     const sw = STW * ss, sh = STH * ss, sy = HZ + CAMH * ss;
@@ -60,18 +145,7 @@ export default function make(ctx, t0, t1) {
         g.beginPath(); g.ellipse(dd.doorX, sy - 4, dd.doorW * 1.3, dd.doorH * 0.35, 0, 0, Math.PI * 2); g.fill(); g.restore();
       }
     }
-    const vis = buildings.filter((b) => b.z - z > 8 && b.z - z < 3000 && b.z < zStore - 80).sort((a, b) => b.z - a.z);
-    for (const b of vis) {
-      const d = b.z - z, sc = F / d;
-      const x = W / 2 + b.side * (380 + b.w / 2) * sc, yb = HZ + CAMH * sc, bw = b.w * sc, bh = b.h * sc;
-      g.fillStyle = b.col; g.fillRect(x - bw / 2, yb - bh, bw, bh);
-      g.lineWidth = Math.max(1, 3 * sc); g.strokeStyle = INK; g.strokeRect(x - bw / 2, yb - bh, bw, bh);
-      if (sc > 0.15) {
-        const cw = 14 * sc;
-        for (let wy = yb - bh + cw; wy < yb - cw * 2; wy += cw * 2) for (let wx = x - bw / 2 + cw; wx < x + bw / 2 - cw; wx += cw * 2) { g.fillStyle = hash(b.seed + wx * 0.01 + wy * 0.01) > 0.4 ? '#ffd86b' : '#22154a'; g.fillRect(wx, wy, cw, cw * 1.2); }
-      }
-      if (b.sign && sc > 0.2) popText(g, ['SALE', 'T-POT', 'DEALS', 'OPEN'][b.seed % 4], x, yb - bh - 14 * sc, 26 * sc, { fill: RAINBOW[b.seed % 8], outline: 4 * sc, shadow: false });
-    }
+    sideStuff(g, t, z);
   }
 
   return {
