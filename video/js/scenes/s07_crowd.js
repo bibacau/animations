@@ -73,22 +73,26 @@ export default function make(ctx, t0, t1) {
         drawBuddy(g, { x: p.x, y, s: p.s, skin: p.skin, ...ps, face: jumping ? 'joy' : (p.ri === 2 ? 'happy' : 'happy'), t, flip: p.flip, look: { x: 0, y: -0.6 }, blink: 0 });
       }
       if (jumping) confetti(g, t, wNever.start, { n: 80 });
-      // big "T-POT" slams in the middle, then flies up to the top-left and becomes the first
-      // word of the lyric line, landing on the beat of "WHERE"
-      if (t >= wTpot.start - 0.04) {
-        if (!lay) lay = captionLayout(g, m, m.phrases[m.words.indexOf(wTpot) >= 0 ? wTpot.line : 0], { pos: 'top', size: 40, y: 40 });
-        const target = { x: lay.xs[0], y: lay.y, cap: lay.size * 0.7 };
+      // no pop-in: on "T-POT" a COPY of the logo on the stage sign lifts off the sign (glowing),
+      // hovers on the beat, then flies up to the start of the lyric line and hands over to the
+      // caption word on the beat of "WHERE"
+      if (t >= wTpot.start - 0.04 && t < landT + 0.12) {
+        if (!lay) lay = captionLayout(g, m, m.phrases[wTpot.line], { pos: 'top', size: 40, y: 40 });
+        const sc0 = 300 / L.box.w;                                   // the sign's logo scale
+        const lift = easeOutBack(prog(t, wTpot.start - 0.04, wTpot.start + 0.2), 2);
         const u = easeInOut(prog(t, flyT, landT));
-        const pop = easeOutBack(prog(t, wTpot.start - 0.04, wTpot.start + 0.15), 2.5);
-        const big = 66 * (1 + m.pulse(t) * 0.08 * (1 - u));
-        const cap = lerp(big * pop, target.cap, u);
-        const x = lerp(W / 2, target.x, u), y = lerp(262, target.y, u) - Math.sin(u * Math.PI) * 40;
-        if (t < landT + 0.02) {
-          g.save(); g.translate(x, y); g.rotate(Math.sin(u * Math.PI) * -0.25);
-          drawLogoWord(g, 0, 0, cap, { outline: Math.max(2, cap * 0.09), outlineCol: '#fff' });
-          g.restore();
-          for (let i = 1; i <= 3 && u > 0 && u < 1; i++) { g.save(); g.globalAlpha = 0.25 / i; drawLogoWord(g, lerp(W / 2, target.x, u - i * 0.06), lerp(262, target.y, u - i * 0.06), cap, {}); g.restore(); }
-        }
+        const signS = 1 + m.pulse(t) * 0.06;
+        const hx = W / 2, hy = 150 - 22 * lift;                      // hovering just in front of the sign
+        const tx = lay.xs[0], ty = lay.y, tsc = (lay.size * 1.9) / L.box.w;   // caption-word size
+        const x = lerp(hx, tx, u), y = lerp(hy, ty, u) - Math.sin(u * Math.PI) * 50;
+        const sc = lerp(sc0 * signS * (1 + 0.12 * lift * (1 - u)), tsc, u);
+        const fade = 1 - prog(t, landT, landT + 0.12);
+        g.save(); g.globalAlpha = fade; g.translate(x, y); g.rotate(Math.sin(u * Math.PI) * -0.2);
+        g.shadowColor = '#fff7b0'; g.shadowBlur = 22 * lift;
+        rr(g, -L.box.w * sc / 2 - 8, -L.box.h * sc / 2 - 8, L.box.w * sc + 16, L.box.h * sc + 16, 12 * sc / sc0); g.fillStyle = 'rgba(255,255,255,0.92)'; g.fill();
+        g.shadowBlur = 0;
+        for (const p of Object.values(L.parts)) drawPart(g, p, (p.cx - L.box.cx) * sc, (p.cy - L.box.cy) * sc, sc);
+        g.restore();
         ctx.mark(wTpot.i);
       }
     },

@@ -96,8 +96,31 @@ export default function make(ctx, t0, t1) {
       // disco ball + light spots
       const ba = t * 1.5;
       g.strokeStyle = INK; g.lineWidth = 2; g.beginPath(); g.moveTo(W / 2, 0); g.lineTo(W / 2, 40); g.stroke();
-      circle(g, W / 2, 70, 30); fillStroke(g, '#c8c8d8', 3);
-      for (let i = 0; i < 6; i++) for (let j = 0; j < 4; j++) { g.fillStyle = (i + j + Math.floor(ba * 4)) % 3 ? '#e8e8f8' : '#8888a8'; g.fillRect(W / 2 - 24 + i * 8, 48 + j * 11, 6, 9); }
+      // a real mirror ball: tiles follow the sphere (rows shrink toward the poles), clipped to
+      // the circle, shaded darker at the edge, with a bright highlight; it turns slowly
+      { const bx = W / 2, by = 70, R = 30;
+        g.save(); circle(g, bx, by, R); g.clip();
+        g.fillStyle = '#8a8aa6'; g.fillRect(bx - R, by - R, R * 2, R * 2);
+        const rows = 9;
+        for (let r = 0; r < rows; r++) {
+          const la0 = -Math.PI / 2 + r * Math.PI / rows, la1 = la0 + Math.PI / rows;
+          const y0 = by + Math.sin(la0) * R, y1 = by + Math.sin(la1) * R, rad = Math.cos((la0 + la1) / 2) * R;
+          const cols = Math.max(4, Math.round(rad / 3.2));
+          for (let c = 0; c < cols * 2; c++) {
+            const lo0 = c / cols * Math.PI + ba, lo1 = lo0 + Math.PI / cols;
+            if (Math.cos((lo0 + lo1) / 2) < 0) continue;   // back of the ball
+            const x0 = bx + Math.sin(lo0) * rad, x1 = bx + Math.sin(lo1) * rad;
+            const lit = 0.45 + 0.55 * Math.cos((lo0 + lo1) / 2) * Math.cos((la0 + la1) / 2);
+            const sparkle = hash(r * 31 + c + Math.floor(t * 6)) > 0.9 ? 1 : 0;
+            const v = Math.round(140 + 115 * Math.min(1, lit + sparkle * 0.5));
+            g.fillStyle = `rgb(${v},${v},${Math.min(255, v + 18)})`;
+            g.fillRect(Math.min(x0, x1) + 0.6, y0 + 0.6, Math.abs(x1 - x0) - 1.2, y1 - y0 - 1.2);
+          }
+        }
+        const sh = g.createRadialGradient(bx - 10, by - 12, 2, bx, by, R); sh.addColorStop(0, 'rgba(255,255,255,0.55)'); sh.addColorStop(0.5, 'rgba(255,255,255,0)'); sh.addColorStop(1, 'rgba(20,20,40,0.45)');
+        g.fillStyle = sh; g.fillRect(bx - R, by - R, R * 2, R * 2);
+        g.restore();
+        circle(g, bx, by, R); g.lineWidth = 3; g.strokeStyle = INK; g.stroke(); }
       for (let i = 0; i < 26; i++) { const a = ba + i * 2.39, r = 120 + (i * 37) % 300; circle(g, W / 2 + Math.cos(a) * r * 1.4, 70 + Math.abs(Math.sin(a)) * r, 5); g.fillStyle = RAINBOW[i % 8] + 'aa'; g.fill(); }
       g.fillStyle = '#16244a'; g.fillRect(0, GY, W, H - GY);
       speakerRow(g, t, m, 4, GY, 0.95);

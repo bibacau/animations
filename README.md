@@ -16,16 +16,17 @@ where every frame is a pure function of time, and rendered frame by frame to vid
 | 21.8 | T-POT'S DEALS TOOK ME BY SURPRISE | New character, Mimi. The DEALS board lights up word by word and discount tags rain in. Surprised on "SURPRISE"; on the drop, hands up, joy, confetti cannons |
 | 25.4 | T-POT, WHERE THE SAVINGS NEVER STOP | Crowd party: three rows wave on every beat (the wave rolls back row by row), bounce on kicks, jump on "NEVER STOP". Coins rain; the logo glows on stage |
 | 30.6 | TV'S FLASHING, WASHERS GOING NON-STOP | Pip POOFs into a TV that strobes on 16ths. One continuous move: zoom into its screen (which shows the washer), ease into the drum, cross-fade inside at the same rotation, and spin up smoothly (spin blur) to white |
-| 34.7 | LOW PRICES, OH YEAH, THAT'S THE PLOT | Electronics price board: prices drop on 8th notes (slot-machine roll, old digits tumble off). Each product drops twice, ending at one third of its price: TV RM3,999 → RM1,333, washer RM2,697 → RM899, fridge RM2,997 → RM999, rice cooker RM597 → RM199, aircon RM2,397 → RM799, microwave RM897 → RM299 |
+| 34.7 | LOW PRICES, OH YEAH, THAT'S THE PLOT | Electronics price board: one product per beat drops in a single step (slot-machine roll, old digits tumble off) straight from the original price to one third of it, then an "ALL 1/3 PRICE!" banner stamps on the next beat: TV RM3,999 → RM1,333, washer RM2,697 → RM899, fridge RM2,997 → RM999, rice cooker RM597 → RM199, aircon RM2,397 → RM799, microwave RM897 → RM299 |
 | 38.8 | YOU WANT THE BEST DEAL, HEAD TO T-POT | Long road between buildings, with the T-POT store at the end of the road from the first frame. We accelerate until the screen smears, stop dead in front of the store on "TO", and its doors blaze on "T-POT" |
-| 42.9 | (instrumental) | Bright white/red/green appliance showroom. The real logo letters grow legs and race, leap into place on the downbeat, the swoosh sweeps in and the leaf pops. A different electrical product drops onto the floor on every beat (evenly spaced slots), with confetti bursts on every beat. It stops on the logo |
+| 42.9 | (instrumental) | Bright white/red/green appliance showroom. The real logo letters grow legs and race, leap into place on the downbeat, the swoosh sweeps in and the leaf pops. A big electrical product drops onto the floor on every beat into 7 evenly spaced slots (a new one knocks the old one off), with confetti bursts on every beat. It stops on the logo |
 
 ## Characters and brand
 - **Characters:** cute animals with fur shading, muzzles, inner ears, paw pads, tails and T-POT shirts.
   Pip is a shiba puppy and Mimi is a grey tabby cat; the crowd mixes dogs, cats, bunnies, bears,
   pandas and foxes.
-- **Brand word:** "T-POT" is always drawn with the logo's own letterforms (`drawLogoWord`), in
-  captions, signs, screens and labels. `popText` swaps it in automatically.
+- **Brand word:** a standalone "T-POT" (signs, screens, labels) is drawn with the logo's own
+  letterforms (`drawLogoWord`). Inside a sentence (captions, "T-POT'S DEALS") it is set in the same
+  font as the surrounding words, so sizes match.
 
 ## Set dressing
 Backgrounds are dressed with on-theme items (hanging bulbs, framed product posters, wallpaper,

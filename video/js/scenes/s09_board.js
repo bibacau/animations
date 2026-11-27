@@ -12,19 +12,20 @@ export default function make(ctx, t0, t1) {
   const m = ctx.music, wd = m.wordsIn(t0, t1);
   const wOh = wd.find((w) => w.text === 'OH');
   const items = [
-    { name: 'SMART TV', draw: (g) => drawTV(g, 110, (g, x, y, w, h) => screenGlow(g, x, y, w, h)), prices: [3999, 2666, 1333] },
-    { name: 'WASHER', draw: (g) => drawWasher(g, 66, 0), prices: [2697, 1798, 899] },
-    { name: 'FRIDGE', draw: (g) => drawFridge(g, 40), prices: [2997, 1998, 999] },
-    { name: 'RICE COOKER', draw: (g) => drawRice(g, 80), prices: [597, 398, 199] },
-    { name: 'AIRCON', draw: (g) => drawAircon(g, 120), prices: [2397, 1598, 799] },
-    { name: 'MICROWAVE', draw: (g) => drawMicrowave(g, 96), prices: [897, 598, 299] },
+    { name: 'SMART TV', draw: (g) => drawTV(g, 110, (g, x, y, w, h) => screenGlow(g, x, y, w, h)), prices: [3999, 1333] },
+    { name: 'WASHER', draw: (g) => drawWasher(g, 66, 0), prices: [2697, 899] },
+    { name: 'FRIDGE', draw: (g) => drawFridge(g, 40), prices: [2997, 999] },
+    { name: 'RICE COOKER', draw: (g) => drawRice(g, 80), prices: [597, 199] },
+    { name: 'AIRCON', draw: (g) => drawAircon(g, 120), prices: [2397, 799] },
+    { name: 'MICROWAVE', draw: (g) => drawMicrowave(g, 96), prices: [897, 299] },
   ];
-  // schedule: a drop on every 8th note from the first beat; 12 drops = each product twice
-  // (original -> two thirds -> ONE THIRD of the original price)
+  // schedule: ONE drop per product, straight from the original price to the final price
+  // (one third of it), one product per beat
   const slots = [];
-  for (let i = m.idx(t0) + 1; m.bt(i) < t1 - 0.2; i++) { slots.push(m.bt(i)); slots.push(m.bt(i) + m.P / 2); }
-  const order = [0, 3, 1, 4, 2, 5];
-  const drops = slots.slice(0, 12).map((bt, k) => ({ t: bt, item: order[k % 6], step: Math.floor(k / 6) + 1 }));
+  for (let i = m.idx(t0) + 1; m.bt(i) < t1 - 0.2; i++) slots.push(m.bt(i));
+  const order = [0, 1, 2, 3, 4, 5];
+  const drops = slots.slice(0, 6).map((bt, k) => ({ t: bt, item: order[k], step: 1 }));
+  const stampT = slots[6] ?? t1 - 0.5;
   items.forEach((it, i) => { it.drops = drops.filter((d) => d.item === i); });
   const fmt = (n) => 'RM' + n.toLocaleString('en-US');
 
@@ -92,6 +93,15 @@ export default function make(ctx, t0, t1) {
         g.restore();
       });
       sparkles(g, t, 8, 51, { x: 0, y: 70, w: W, h: H - 140 });
+      // after the last drop: an "ALL 1/3 PRICE!" banner stamps across the board on the next
+      // beat and pulses on every beat after it
+      if (t >= stampT - 0.03) {
+        const k = 1 + 1.4 * (1 - easeOutBounce(prog(t, stampT - 0.03, stampT + 0.22)));
+        g.save(); g.translate(W / 2, 247); g.rotate(-0.06); g.scale(k * (1 + m.pulse(t) * 0.05), k * (1 + m.pulse(t) * 0.05));
+        rr(g, -190, -24, 380, 48, 12); fillStroke(g, COL.red, 5, '#fff');
+        popText(g, 'ALL 1/3 PRICE!', 0, 1, 30, { fill: COL.yellow, outline: 6 });
+        g.restore();
+      }
       // Pip pops up in the corner on "OH YEAH"
       if (wOh && t >= wOh.start - 0.05) {
         const u = easeOutBack(prog(t, wOh.start - 0.05, wOh.start + 0.2), 2);

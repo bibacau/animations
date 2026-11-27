@@ -63,7 +63,9 @@ export function star(g, x, y, r1, r2, n = 5, rot = -Math.PI / 2) {
 /** chunky cartoon text: fill + thick outline + drop shadow. align center/middle.
  *  Any "T-POT" inside the text is drawn with the real logo letterforms. */
 export function popText(g, text, x, y, size, o = {}) {
-  if (BRAND.logo && text.includes('T-POT') && o.brand !== false) return brandText(g, text, x, y, size, o);
+  // the logo letterforms are used only when "T-POT" stands on its own (a sign, a label);
+  // inside a sentence it is set in the same font as the words around it
+  if (BRAND.logo && text.trim() === 'T-POT' && o.brand !== false) return brandText(g, text, x, y, size, o);
   plainText(g, text, x, y, size, o);
 }
 function plainText(g, text, x, y, size, o = {}) {
@@ -92,8 +94,8 @@ function brandText(g, text, x, y, size, o) {
   });
 }
 function plainWidth(g, text, size, font = 'Bowlby') { g.save(); g.font = `${size}px ${font}, Impact, sans-serif`; const w = g.measureText(text).width; g.restore(); return w; }
-export function textWidth(g, text, size, font = 'Bowlby') {
-  if (BRAND.logo && text.includes('T-POT')) { const p = text.split('T-POT'); return p.reduce((a, s) => a + (s ? plainWidth(g, s, size, font) : 0), 0) + (p.length - 1) * logoWordWidth(capOf(size, font)); }
+export function textWidth(g, text, size, font = 'Bowlby', brand = true) {
+  if (brand && BRAND.logo && text.trim() === 'T-POT') return logoWordWidth(capOf(size, font));
   return plainWidth(g, text, size, font);
 }
 

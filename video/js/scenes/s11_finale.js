@@ -26,16 +26,18 @@ export default function make(ctx, t0, t1) {
   const swooshT = A + P / 2, leafT = A + P;
   const slams = [A + 2 * P, A + 3 * P, A + 4 * P, A + 5 * P];
   // the drop schedule: one product per beat from the start of the outro to the final hit
+  // BIG products, one per beat, into 7 evenly spaced floor slots (filled middle-out so the
+  // floor stays balanced). When a slot is already full, the new product knocks the old one off.
   const DROPS = [
-    (g) => drawTV(g, 120, (g, x, y, w, h) => screenGlow(g, x, y, w, h, '#16b8ff', '#ff2a4d')), (g, t) => drawWasher(g, 82, t * 5), (g) => drawFridge(g, 46),
-    (g) => drawRice(g, 82), (g, t) => drawFan(g, 54, t * 14), (g) => drawMicrowave(g, 92), (g, t) => drawBlender(g, 46, t, 1), (g) => drawKettle(g, 62),
-    (g, t) => drawTallSpeaker(g, 42, m.pulse(t)), (g, t) => drawVacuum(g, 84, t), (g) => drawAircon(g, 110), (g) => drawLaptop(g, 84, (g, x, y, w, h) => screenGlow(g, x, y, w, h)),
-    (g) => drawTV(g, 100, (g, x, y, w, h) => screenGlow(g, x, y, w, h, '#3ea74d', '#16b8ff')),
+    (g) => drawFridge(g, 74), (g, t) => drawWasher(g, 104, t * 5), (g) => drawTV(g, 150, (g, x, y, w, h) => screenGlow(g, x, y, w, h, '#16b8ff', '#ff2a4d')),
+    (g) => drawAircon(g, 130), (g) => drawRice(g, 100), (g, t) => drawFan(g, 72, t * 14), (g) => drawMicrowave(g, 116),
+    (g, t) => drawTallSpeaker(g, 54, m.pulse(t)), (g, t) => drawVacuum(g, 104, t), (g) => drawKettle(g, 80), (g, t) => drawBlender(g, 62, t, 1),
+    (g) => drawLaptop(g, 104, (g, x, y, w, h) => screenGlow(g, x, y, w, h)), (g) => drawFridge(g, 68),
   ];
   const dropBeats = m.beatsBetween(t0 + 0.05, FINAL + 0.01).map((b) => b.t);
-  const NS = dropBeats.length;
-  const fillOrder = []; { const seen = new Set(); const rec = (lo, hi) => { if (lo > hi) return; const mid = (lo + hi) >> 1; fillOrder.push(mid); rec(lo, mid - 1); rec(mid + 1, hi); }; rec(0, NS - 1); }
-  const drops = dropBeats.map((bt, k) => ({ t: bt, kind: k % DROPS.length, x: (fillOrder[k] + 0.5) * W / NS, s: 0.62 }));
+  const NS = 7, slotOrder = [3, 0, 6, 1, 5, 2, 4];
+  const drops = dropBeats.map((bt, k) => ({ t: bt, kind: k % DROPS.length, slot: slotOrder[k % NS], x: (slotOrder[k % NS] + 0.5) * W / NS, s: 1 }));
+  drops.forEach((d) => { const nxt = drops.find((e) => e.t > d.t && e.slot === d.slot); d.knocked = nxt ? nxt.t : null; });
   const cast = [
     { skin: SKINS.pip, x: 90 }, { skin: SKINS.mimi, x: W - 90 },
     { skin: crowdSkin(2), x: 190 }, { skin: crowdSkin(5), x: W - 190 },
@@ -97,6 +99,13 @@ export default function make(ctx, t0, t1) {
         const u = clamp((t - (d.t - 0.3)) / 0.3);
         const y = GY - 4 - (1 - easeIn(u)) * (GY + 40) - Math.abs(springHit(t - d.t, 16, 7)) * 10;
         const sq = t > d.t ? 1 + springHit(t - d.t, 24, 9) * 0.15 : 1;
+        if (d.knocked !== null && t >= d.knocked) {   // knocked off by the next product in this slot
+          const q = t - d.knocked; if (q > 0.55) return;
+          const dir = d.x < W / 2 ? -1 : 1;
+          g.save(); g.translate(d.x + dir * q * 520, GY - 4 - q * 260 + q * q * 900); g.rotate(dir * q * 9); g.globalAlpha = 1 - q / 0.55;
+          g.scale(d.s, d.s); DROPS[d.kind](g, t); g.restore();
+          return;
+        }
         g.save(); g.translate(d.x, y); g.scale(d.s / sq, d.s * sq); DROPS[d.kind](g, t); g.restore();
         if (t >= d.t && t < d.t + 0.35) { const q = prog(t, d.t, d.t + 0.35); for (let i = 0; i < 6; i++) { circle(g, d.x + (i - 2.5) * 12 * (0.6 + q), GY - 4 - q * 10, 7 * (1 - q)); g.fillStyle = 'rgba(255,255,255,0.9)'; g.fill(); } }
       });

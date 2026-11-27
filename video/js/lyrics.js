@@ -8,7 +8,7 @@ export function captionLayout(g, music, phrase, o = {}) {
   const words = phrase.words.map((i) => music.words[i]);
   let size = o.size || 30;
   const gap = size * 0.35;
-  let widths = words.map((w) => textWidth(g, w.display, size));
+  let widths = words.map((w) => textWidth(g, w.display, size, 'Bowlby', false));
   let total = widths.reduce((a, b) => a + b, 0) + gap * (words.length - 1);
   const maxW = W - 60;
   if (total > maxW) { const k = maxW / total; size *= k; widths = widths.map((x) => x * k); total = maxW; }
@@ -24,7 +24,7 @@ export function drawCaption(g, music, phrase, t, o = {}) {
   if (t < words[0].start - 0.06) return;
   let size = o.size || 30;
   const gap = size * 0.35;
-  let widths = words.map((w) => textWidth(g, w.display, size));
+  let widths = words.map((w) => textWidth(g, w.display, size, 'Bowlby', false));
   let total = widths.reduce((a, b) => a + b, 0) + gap * (words.length - 1);
   const maxW = W - 60;
   if (total > maxW) { const k = maxW / total; size *= k; widths = widths.map((x) => x * k); total = maxW; }
@@ -38,7 +38,7 @@ export function drawCaption(g, music, phrase, t, o = {}) {
     const s = easeOutBack(clamp(lt / 0.16), 2.4) * (1 + (w === cur ? 0.12 * decay(t - w.start, 6) : 0));
     const active = w === cur && t < w.end + 0.15;
     g.save(); g.translate(cx, y - (active ? 4 * decay(t - w.start, 5) : 0)); g.scale(s, s);
-    popText(g, w.display, 0, 0, size, { fill: active ? (o.hi || '#ffd400') : (o.fill || '#fff'), stroke: o.stroke, outline: size * 0.2 });
+    popText(g, w.display, 0, 0, size, { fill: active ? (o.hi || '#ffd400') : (o.fill || '#fff'), stroke: o.stroke, outline: size * 0.2, brand: false });
     g.restore();
   });
 }
