@@ -1,0 +1,7 @@
+{
+  "title": "My Video",
+  "timeline": "data/timeline.json",
+  "logo": "assets/logo_parts.json",
+  "brandWord": "BRAND",
+  "audio": "assets/audio.mp3"
+}

@@ -1,0 +1,32 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Video</title>
+<style>
+  /* fonts used by the starter: put the .woff2 files in assets/fonts (e.g. from @fontsource) */
+  @font-face { font-family: 'Bowlby'; src: url('assets/fonts/bowlby.woff2') format('woff2'); }
+  @font-face { font-family: 'Anton'; src: url('assets/fonts/anton.woff2') format('woff2'); }
+  html, body { margin: 0; background: #000; height: 100%; display: flex; align-items: center; justify-content: center; }
+  canvas { width: 100vw; max-height: 100vh; object-fit: contain; display: block; }
+  #ui { position: fixed; left: 8px; bottom: 8px; color: #fff; font: 12px monospace; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="ui"></div>
+<script type="module" src="js/main.js"></script>
+<script type="module">
+  // live preview with sound: open /?preview=1 and click (optionally &t=24 to start at 24 s)
+  const qs = new URLSearchParams(location.search);
+  if (qs.get('preview')) {
+    await new Promise((r) => { const i = setInterval(() => { if (window.__ready) { clearInterval(i); r(); } }, 50); });
+    const audio = new Audio(window.__config.audio);
+    document.body.addEventListener('click', () => { audio.currentTime = +(qs.get('t') || 0); audio.play(); }, { once: true });
+    const ui = document.getElementById('ui'); ui.textContent = 'click to play';
+    const loop = () => { window.renderAt(audio.currentTime || +(qs.get('t') || 0)); ui.textContent = audio.currentTime.toFixed(2); requestAnimationFrame(loop); };
+    loop();
+  }
+</script>
+</body>
+</html>
